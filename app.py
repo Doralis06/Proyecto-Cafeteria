@@ -93,6 +93,7 @@ def productos():
             nombre = request.form["nombre"].strip()
             tipo = request.form["tipo"].strip()
             stock = int(request.form["stock"])
+            costo = float(request.form.get("costo") or 0)
 
             precio = float(request.form.get("precio") or 0)
             precio_pequeno = float(request.form.get("precio_pequeno") or 0)
@@ -114,17 +115,17 @@ def productos():
 
                 c.execute("""
                     UPDATE productos
-                    SET precio = ?, stock = ?, tipo = ?, precio_pequeno = ?, precio_grande = ?
+                    SET precio = ?, stock = ?, tipo = ?, precio_pequeno = ?, precio_grande = ?, costo = ?
                     WHERE id = ?
-                """, (precio, nuevo_stock, tipo, precio_pequeno, precio_grande, producto_id))
+                """, (precio, nuevo_stock, tipo, precio_pequeno, precio_grande, costo, producto_id))
 
                 mensaje = f"El producto '{nombre}' ya existía. Se actualizó y se sumó el stock."
                 tipo_mensaje = "info"
             else:
                 c.execute("""
-                    INSERT INTO productos (nombre, precio, stock, tipo, precio_pequeno, precio_grande)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (nombre, precio, stock, tipo, precio_pequeno, precio_grande))
+                    INSERT INTO productos (nombre, precio, stock, tipo, precio_pequeno, precio_grande, costo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (nombre, precio, stock, tipo, precio_pequeno, precio_grande, costo))
 
                 mensaje = f"Producto '{nombre}' agregado correctamente."
                 tipo_mensaje = "ok"
@@ -194,7 +195,8 @@ def editar_producto(id):
         c.execute("""
             SELECT id, nombre, precio, stock, tipo,
                    COALESCE(precio_pequeno, 0),
-                   COALESCE(precio_grande, 0)
+                   COALESCE(precio_grande, 0),
+                   COALESCE(costo, 0)
             FROM productos
             WHERE id = ?
         """, (id,))
@@ -205,7 +207,7 @@ def editar_producto(id):
 
         producto = list(producto)
 
-        while len(producto) < 7:
+        while len(producto) < 8:
             producto.append(0)
 
         return render_template("editar_producto.html", producto=producto)
@@ -237,6 +239,7 @@ def actualizar_producto(id):
         nombre = request.form["nombre"].strip()
         tipo = request.form["tipo"].strip()
         stock = int(request.form["stock"] or 0)
+        costo = float(request.form.get("costo") or 0)
 
         precio = float(request.form.get("precio") or 0)
         precio_pequeno = float(request.form.get("precio_pequeno") or 0)
@@ -261,9 +264,10 @@ def actualizar_producto(id):
                 stock = ?,
                 tipo = ?,
                 precio_pequeno = ?,
-                precio_grande = ?
+                precio_grande = ?,
+                costo = ?
             WHERE id = ?
-        """, (nombre, precio, stock, tipo, precio_pequeno, precio_grande, id))
+        """, (nombre, precio, stock, tipo, precio_pequeno, precio_grande, costo, id))
 
         conn.commit()
         return redirect("/productos")
@@ -274,6 +278,7 @@ def actualizar_producto(id):
     finally:
         if conn:
             conn.close()
+
 
 # ---------------- FACTURACIÓN ----------------
 @app.route("/facturacion")
@@ -322,7 +327,6 @@ def facturar():
 
         devuelta = pago_con - total
 
-        # Crear factura
         c.execute(
             "INSERT INTO facturas(total, pago_con, devuelta) VALUES (?, ?, ?)",
             (total, pago_con, devuelta)
@@ -336,13 +340,11 @@ def facturar():
             precio = float(p["precio"])
             subtotal = cantidad * precio
 
-            # Guardar detalle
             c.execute("""
                 INSERT INTO detalle_factura(factura_id, producto, cantidad, precio, subtotal)
                 VALUES (?, ?, ?, ?, ?)
             """, (factura_id, nombre_detalle, cantidad, precio, subtotal))
 
-            # Verificar stock actual
             c.execute("SELECT stock FROM productos WHERE nombre = ?", (nombre_base,))
             fila_stock = c.fetchone()
 
@@ -356,7 +358,6 @@ def facturar():
                 conn.rollback()
                 return jsonify({"error": f"No hay suficiente stock para '{nombre_base}'."}), 400
 
-            # Descontar stock
             c.execute("""
                 UPDATE productos
                 SET stock = stock - ?
@@ -459,9 +460,13 @@ def ver_reporte(id):
     conn = None
     try:
         conn = conectar_seguro()
-        conn.row_factory = lambda cursor, row: {
-            col[0]: row[idx] for idx, col in enumerate(cursor.description)
-        }
+        try:
+            conn.row_factory = lambda cursor, row: {
+                col[0]: row[idx] for idx, col in enumerate(cursor.description)
+            }
+        except:
+            pass
+
         c = conn.cursor()
 
         c.execute("""
@@ -474,15 +479,48 @@ def ver_reporte(id):
         if not reporte:
             return "❌ No se encontró el reporte"
 
+        fecha_cierre = reporte["fecha_cierre"] if isinstance(reporte, dict) else reporte[1]
+
         c.execute("""
             SELECT id, fecha, total
             FROM facturas
             WHERE DATE(fecha) = ?
             ORDER BY fecha DESC
-        """, (reporte["fecha_cierre"],))
+        """, (fecha_cierre,))
         facturas = c.fetchall()
 
         return render_template("reporte_detalle.html", reporte=reporte, facturas=facturas)
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route("/eliminar_reporte/<int:id>")
+def eliminar_reporte(id):
+    if "usuario" not in session:
+        return redirect("/")
+
+    conn = None
+    try:
+        conn = conectar_seguro()
+        c = conn.cursor()
+
+        c.execute("SELECT id FROM cierres_caja WHERE id = ?", (id,))
+        existe = c.fetchone()
+
+        if not existe:
+            return "❌ El reporte no existe."
+
+        c.execute("DELETE FROM cierres_caja WHERE id = ?", (id,))
+        conn.commit()
+
+        return redirect("/reportes")
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return f"Error al eliminar el reporte: {e}"
 
     finally:
         if conn:
@@ -566,6 +604,7 @@ def ventas():
         if conn:
             conn.close()
 
+
 @app.route("/eliminar_venta/<int:id>")
 def eliminar_venta(id):
     if "usuario" not in session:
@@ -616,6 +655,7 @@ def eliminar_venta(id):
         if conn:
             conn.close()
 
+
 @app.route("/estadisticas")
 def estadisticas():
     if "usuario" not in session:
@@ -649,6 +689,102 @@ def estadisticas():
             cantidad=cantidad,
             fechas=fechas,
             totales=totales
+        )
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route("/ganancias")
+def ganancias():
+    if "usuario" not in session:
+        return redirect("/")
+
+    conn = None
+    try:
+        conn = conectar_seguro()
+        c = conn.cursor()
+
+        c.execute("SELECT COALESCE(SUM(total), 0) FROM facturas")
+        total_vendido = float(c.fetchone()[0] or 0)
+
+        c.execute("""
+            SELECT nombre, precio, stock, tipo, precio_pequeno, precio_grande, COALESCE(costo, 0)
+            FROM productos
+        """)
+        productos = c.fetchall()
+
+        productos_dict = {}
+        valor_inventario = 0.0
+
+        for p in productos:
+            nombre = p[0]
+            precio = float(p[1] or 0)
+            stock = int(p[2] or 0)
+            tipo = p[3] or "General"
+            precio_pequeno = float(p[4] or 0)
+            precio_grande = float(p[5] or 0)
+            costo = float(p[6] or 0)
+
+            productos_dict[nombre] = {
+                "precio": precio,
+                "tipo": tipo,
+                "precio_pequeno": precio_pequeno,
+                "precio_grande": precio_grande,
+                "costo": costo
+            }
+
+            valor_inventario += stock * costo
+
+        c.execute("""
+            SELECT producto, cantidad, precio, subtotal
+            FROM detalle_factura
+        """)
+        detalles = c.fetchall()
+
+        costo_total_vendido = 0.0
+        ingreso_total_detalle = 0.0
+
+        for d in detalles:
+            nombre_detalle = d[0]
+            cantidad = int(d[1] or 0)
+            subtotal = float(d[3] or 0)
+
+            ingreso_total_detalle += subtotal
+
+            if " (" in nombre_detalle:
+                nombre_base = nombre_detalle.split(" (")[0]
+            else:
+                nombre_base = nombre_detalle
+
+            costo_producto = 0.0
+            if nombre_base in productos_dict:
+                costo_producto = float(productos_dict[nombre_base]["costo"] or 0)
+
+            costo_total_vendido += costo_producto * cantidad
+
+        ganancia_total = ingreso_total_detalle - costo_total_vendido
+
+        if ganancia_total > 0:
+            capital_reinversion = ganancia_total * 0.60
+            ahorro_reserva = ganancia_total * 0.20
+            fondo_imprevistos = ganancia_total * 0.20
+        else:
+            capital_reinversion = 0
+            ahorro_reserva = 0
+            fondo_imprevistos = 0
+
+        return render_template(
+            "ganancias.html",
+            total_vendido=total_vendido,
+            ingreso_total_detalle=ingreso_total_detalle,
+            costo_total_vendido=costo_total_vendido,
+            ganancia_total=ganancia_total,
+            valor_inventario=valor_inventario,
+            capital_reinversion=capital_reinversion,
+            ahorro_reserva=ahorro_reserva,
+            fondo_imprevistos=fondo_imprevistos
         )
 
     finally:
@@ -826,4 +962,4 @@ def ver_cierre(id):
 
 # ---------------- EJECUCIÓN ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

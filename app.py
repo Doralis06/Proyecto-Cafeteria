@@ -93,7 +93,12 @@ def productos():
             nombre = request.form["nombre"].strip()
             tipo = request.form["tipo"].strip()
             stock = int(request.form["stock"])
-            costo = float(request.form.get("costo") or 0)
+            inversion_total = float(request.form.get("inversion_total") or 0)
+
+            if stock <= 0:
+                return "❌ El stock debe ser mayor que 0."
+
+            costo_unitario = inversion_total / stock
 
             precio = float(request.form.get("precio") or 0)
             precio_pequeno = float(request.form.get("precio_pequeno") or 0)
@@ -105,27 +110,43 @@ def productos():
                 precio_pequeno = 0
                 precio_grande = 0
 
-            c.execute("SELECT id, stock FROM productos WHERE nombre = ?", (nombre,))
+            c.execute("SELECT id, stock, inversion_total FROM productos WHERE nombre = ?", (nombre,))
             existente = c.fetchone()
 
             if existente:
                 producto_id = existente[0]
-                stock_actual = existente[1]
+                stock_actual = int(existente[1] or 0)
+                inversion_actual = float(existente[2] or 0)
+
                 nuevo_stock = stock_actual + stock
+                nueva_inversion_total = inversion_actual + inversion_total
+                nuevo_costo_unitario = nueva_inversion_total / nuevo_stock if nuevo_stock > 0 else 0
 
                 c.execute("""
                     UPDATE productos
-                    SET precio = ?, stock = ?, tipo = ?, precio_pequeno = ?, precio_grande = ?, costo = ?
+                    SET precio = ?, stock = ?, tipo = ?, precio_pequeno = ?, precio_grande = ?,
+                        inversion_total = ?, costo_unitario = ?
                     WHERE id = ?
-                """, (precio, nuevo_stock, tipo, precio_pequeno, precio_grande, costo, producto_id))
+                """, (
+                    precio, nuevo_stock, tipo, precio_pequeno, precio_grande,
+                    nueva_inversion_total, nuevo_costo_unitario, producto_id
+                ))
 
                 mensaje = f"El producto '{nombre}' ya existía. Se actualizó y se sumó el stock."
                 tipo_mensaje = "info"
             else:
                 c.execute("""
-                    INSERT INTO productos (nombre, precio, stock, tipo, precio_pequeno, precio_grande, costo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (nombre, precio, stock, tipo, precio_pequeno, precio_grande, costo))
+                    INSERT INTO productos (
+                        nombre, precio, stock, tipo,
+                        precio_pequeno, precio_grande,
+                        inversion_total, costo_unitario
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    nombre, precio, stock, tipo,
+                    precio_pequeno, precio_grande,
+                    inversion_total, costo_unitario
+                ))
 
                 mensaje = f"Producto '{nombre}' agregado correctamente."
                 tipo_mensaje = "ok"
@@ -196,7 +217,8 @@ def editar_producto(id):
             SELECT id, nombre, precio, stock, tipo,
                    COALESCE(precio_pequeno, 0),
                    COALESCE(precio_grande, 0),
-                   COALESCE(costo, 0)
+                   COALESCE(inversion_total, 0),
+                   COALESCE(costo_unitario, 0)
             FROM productos
             WHERE id = ?
         """, (id,))
@@ -207,7 +229,7 @@ def editar_producto(id):
 
         producto = list(producto)
 
-        while len(producto) < 8:
+        while len(producto) < 9:
             producto.append(0)
 
         return render_template("editar_producto.html", producto=producto)
@@ -239,7 +261,12 @@ def actualizar_producto(id):
         nombre = request.form["nombre"].strip()
         tipo = request.form["tipo"].strip()
         stock = int(request.form["stock"] or 0)
-        costo = float(request.form.get("costo") or 0)
+        inversion_total = float(request.form.get("inversion_total") or 0)
+
+        if stock <= 0:
+            return "❌ El stock debe ser mayor que 0."
+
+        costo_unitario = inversion_total / stock
 
         precio = float(request.form.get("precio") or 0)
         precio_pequeno = float(request.form.get("precio_pequeno") or 0)
@@ -265,9 +292,13 @@ def actualizar_producto(id):
                 tipo = ?,
                 precio_pequeno = ?,
                 precio_grande = ?,
-                costo = ?
+                inversion_total = ?,
+                costo_unitario = ?
             WHERE id = ?
-        """, (nombre, precio, stock, tipo, precio_pequeno, precio_grande, costo, id))
+        """, (
+            nombre, precio, stock, tipo, precio_pequeno, precio_grande,
+            inversion_total, costo_unitario, id
+        ))
 
         conn.commit()
         return redirect("/productos")
@@ -706,16 +737,15 @@ def ganancias():
         conn = conectar_seguro()
         c = conn.cursor()
 
-        # Total vendido desde facturas
         c.execute("SELECT COALESCE(SUM(total), 0) FROM facturas")
         total_vendido = float(c.fetchone()[0] or 0)
 
-        # Traer productos con costo
         c.execute("""
             SELECT nombre, precio, stock, tipo,
                    COALESCE(precio_pequeno, 0),
                    COALESCE(precio_grande, 0),
-                   COALESCE(costo, 0)
+                   COALESCE(inversion_total, 0),
+                   COALESCE(costo_unitario, 0)
             FROM productos
         """)
         productos = c.fetchall()
@@ -730,19 +760,20 @@ def ganancias():
             tipo = p[3] or "General"
             precio_pequeno = float(p[4] or 0)
             precio_grande = float(p[5] or 0)
-            costo = float(p[6] or 0)
+            inversion_total = float(p[6] or 0)
+            costo_unitario = float(p[7] or 0)
 
             productos_dict[nombre] = {
                 "precio": precio,
                 "tipo": tipo,
                 "precio_pequeno": precio_pequeno,
                 "precio_grande": precio_grande,
-                "costo": costo
+                "inversion_total": inversion_total,
+                "costo_unitario": costo_unitario
             }
 
-            valor_inventario += stock * costo
+            valor_inventario += stock * costo_unitario
 
-        # Leer detalles de facturas para calcular costo vendido real
         c.execute("""
             SELECT producto, cantidad, precio, subtotal
             FROM detalle_factura
@@ -766,7 +797,7 @@ def ganancias():
 
             costo_producto = 0.0
             if nombre_base in productos_dict:
-                costo_producto = float(productos_dict[nombre_base]["costo"] or 0)
+                costo_producto = float(productos_dict[nombre_base]["costo_unitario"] or 0)
 
             costo_total_vendido += costo_producto * cantidad
 
@@ -799,6 +830,7 @@ def ganancias():
     finally:
         if conn:
             conn.close()
+
 
 # ---------------- CAJA ----------------
 @app.route("/caja", methods=["GET", "POST"])

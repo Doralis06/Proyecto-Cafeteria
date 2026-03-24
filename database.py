@@ -128,7 +128,8 @@ def crear_bd():
             tipo VARCHAR(100) DEFAULT 'General',
             precio_pequeno NUMERIC DEFAULT 0,
             precio_grande NUMERIC DEFAULT 0,
-            costo NUMERIC DEFAULT 0
+            inversion_total NUMERIC DEFAULT 0,
+            costo_unitario NUMERIC DEFAULT 0
         )
         """)
 
@@ -233,7 +234,8 @@ def crear_bd():
             tipo TEXT DEFAULT 'General',
             precio_pequeno REAL DEFAULT 0,
             precio_grande REAL DEFAULT 0,
-            costo REAL DEFAULT 0
+            inversion_total REAL DEFAULT 0,
+            costo_unitario REAL DEFAULT 0
         )
         """)
 
@@ -253,7 +255,12 @@ def crear_bd():
             pass
 
         try:
-            c.execute("ALTER TABLE productos ADD COLUMN costo REAL DEFAULT 0")
+            c.execute("ALTER TABLE productos ADD COLUMN inversion_total REAL DEFAULT 0")
+        except:
+            pass
+
+        try:
+            c.execute("ALTER TABLE productos ADD COLUMN costo_unitario REAL DEFAULT 0")
         except:
             pass
 

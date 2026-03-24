@@ -1,13 +1,19 @@
+import os
 import sqlite3
+from datetime import timedelta
 from flask import Flask, render_template, request, redirect, session, jsonify
 from database import crear_bd, crear_usuario_admin, conectar
 
 app = Flask(__name__)
-app.secret_key = "clave_super_segura"
+app.secret_key = os.getenv("SECRET_KEY", "clave_local_temporal")
+
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 crear_bd()
 crear_usuario_admin()
-
 
 def conectar_seguro():
     conn = conectar()

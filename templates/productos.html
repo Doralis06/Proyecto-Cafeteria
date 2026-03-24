@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<h2>📦 Inventario Inteligente</h2>
+<h2>📦 Inventario </h2>
 
 <div class="form-box">
     <h3>➕ Agregar producto</h3>
@@ -27,36 +27,16 @@
                     <option value="Arepas">Arepas</option>
                     <option value="General">General</option>
                 </select>
-            </div>
+          
+    <input type="number" name="stock" placeholder="Cantidad" required>
 
-            <div>
-                <label for="stock">Stock</label>
-                <input type="number" id="stock" name="stock" required>
-            </div>
-        </div>
+    <input type="number" step="0.01" name="inversion_total" placeholder="Inversión total" required>
 
-        <div class="fila" id="precio_normal_box">
-            <div>
-                <label for="precio">Precio normal</label>
-                <input type="number" step="0.01" id="precio" name="precio" placeholder="Ej: 75">
-            </div>
-        </div>
+    <input type="number" step="0.01" name="precio" placeholder="Precio normal">
 
-        <div class="fila" id="precio_jugos_box" style="display:none;">
-            <div>
-                <label for="precio_pequeno">Precio pequeño</label>
-                <input type="number" step="0.01" id="precio_pequeno" name="precio_pequeno" placeholder="Ej: 50">
-            </div>
+    <input type="number" step="0.01" name="precio_pequeno" placeholder="Precio pequeño">
 
-            <div>
-    <label for="costo">Costo</label>
-    <input type="number" step="0.01" id="costo" name="costo" placeholder="Ej: 40" required>
-</div>
-            <div>
-                <label for="precio_grande">Precio grande</label>
-                <input type="number" step="0.01" id="precio_grande" name="precio_grande" placeholder="Ej: 65">
-            </div>
-        </div>
+    <input type="number" step="0.01" name="precio_grande" placeholder="Precio grande">
 
         <div class="acciones">
             <button type="submit">💾 Guardar producto</button>
@@ -73,17 +53,15 @@
 <div class="tabla-box">
     <h3>📋 Lista de productos</h3>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
+    <table border="1">
+    <tr>
+    <th>Nombre</th>
+    <th>Stock</th>
+    <th>Tipo</th>
+    <th>Precio</th>
+    <th>Costo Unitario</th>
+    <th>Acciones</th>
+    </tr>
 
         <tbody>
             {% if productos %}

@@ -1,170 +1,28 @@
 {% extends "base.html" %}
-
-{% block title %}Ganancias - Cafetería La Curva{% endblock %}
-
 {% block content %}
 
-<style>
-    .ganancias-wrap{
-        display:flex;
-        flex-direction:column;
-        gap:24px;
-    }
+<h2>📊 Ganancias del negocio</h2>
 
-    .hero-ganancias{
-        background:linear-gradient(135deg,#fff9ef,#f9f1e6);
-        padding:28px;
-        border-radius:24px;
-        box-shadow:0 10px 30px rgba(0,0,0,0.08);
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        flex-wrap:wrap;
-        gap:20px;
-    }
+<h3>💵 Total vendido: RD$ {{total_vendido}}</h3>
+<h3>📥 Ingreso real: RD$ {{ingreso_total_detalle}}</h3>
+<h3>📦 Costo total vendido: RD$ {{costo_total_vendido}}</h3>
 
-    .hero-ganancias h1{
-        margin:0 0 8px 0;
-        color:#6b4226;
-        font-size:32px;
-    }
+<hr>
 
-    .hero-ganancias p{
-        margin:0;
-        color:#7b695d;
-    }
+<h2>🔥 Ganancia total: RD$ {{ganancia_total}}</h2>
 
-    .badge-ganancia{
-        background:white;
-        color:#6b4226;
-        padding:12px 18px;
-        border-radius:999px;
-        font-weight:bold;
-        box-shadow:0 6px 18px rgba(0,0,0,0.07);
-    }
+<hr>
 
-    .grid-bonita{
-        display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
-        gap:18px;
-    }
+<h3>📦 Valor inventario: RD$ {{valor_inventario}}</h3>
 
-    .card-bonita{
-        background:white;
-        padding:24px;
-        border-radius:22px;
-        box-shadow:0 10px 30px rgba(0,0,0,0.08);
-    }
+<hr>
 
-    .card-bonita span{
-        display:block;
-        color:#87776a;
-        margin-bottom:8px;
-    }
+<h2>📈 Distribución inteligente</h2>
 
-    .card-bonita h2{
-        margin:0;
-        color:#6b4226;
-        font-size:28px;
-    }
-
-    .logica-box{
-        background:white;
-        padding:24px;
-        border-radius:22px;
-        box-shadow:0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    .logica-box h3{
-        margin-top:0;
-        color:#6b4226;
-    }
-
-    .lista-logica{
-        display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-        gap:18px;
-        margin-top:18px;
-    }
-
-    .mini-card{
-        background:#fff8f2;
-        border:1px solid #f0e5dc;
-        border-radius:18px;
-        padding:18px;
-    }
-
-    .mini-card strong{
-        display:block;
-        color:#6b4226;
-        margin-bottom:8px;
-        font-size:18px;
-    }
-
-    .mini-card p{
-        margin:0;
-        color:#5f5147;
-        font-weight:bold;
-    }
-</style>
-
-<div class="ganancias-wrap">
-
-    <div class="hero-ganancias">
-        <div>
-            <h1>💰 Ganancias del negocio</h1>
-            <p>Aquí ves ventas, costo estimado, ganancia y cuánto puedes separar para reinvertir.</p>
-        </div>
-
-        <div class="badge-ganancia">
-            Ganancia total: RD$ {{ "%.2f"|format(ganancia_total or 0) }}
-        </div>
-    </div>
-
-    <div class="grid-bonita">
-        <div class="card-bonita">
-            <span>Total vendido</span>
-            <h2>RD$ {{ "%.2f"|format(total_vendido or 0) }}</h2>
-        </div>
-
-        <div class="card-bonita">
-            <span>Ingreso por detalles</span>
-            <h2>RD$ {{ "%.2f"|format(ingreso_total_detalle or 0) }}</h2>
-        </div>
-
-        <div class="card-bonita">
-            <span>Costo de lo vendido</span>
-            <h2>RD$ {{ "%.2f"|format(costo_total_vendido or 0) }}</h2>
-        </div>
-
-        <div class="card-bonita">
-            <span>Valor del inventario actual</span>
-            <h2>RD$ {{ "%.2f"|format(valor_inventario or 0) }}</h2>
-        </div>
-    </div>
-
-    <div class="logica-box">
-        <h3>🧠 Distribución sugerida de la ganancia</h3>
-        <p>Usamos una lógica simple: 60% reinversión, 20% ahorro/reserva y 20% imprevistos.</p>
-
-        <div class="lista-logica">
-            <div class="mini-card">
-                <strong>📦 Reinvertir</strong>
-                <p>RD$ {{ "%.2f"|format(capital_reinversion or 0) }}</p>
-            </div>
-
-            <div class="mini-card">
-                <strong>🏦 Ahorro / Reserva</strong>
-                <p>RD$ {{ "%.2f"|format(ahorro_reserva or 0) }}</p>
-            </div>
-
-            <div class="mini-card">
-                <strong>🛠 Imprevistos</strong>
-                <p>RD$ {{ "%.2f"|format(fondo_imprevistos or 0) }}</p>
-            </div>
-        </div>
-    </div>
-
-</div>
+<ul>
+<li>🔁 Reinversión (60%): RD$ {{capital_reinversion}}</li>
+<li>💰 Ahorro (20%): RD$ {{ahorro_reserva}}</li>
+<li>⚠️ Fondo emergencia (20%): RD$ {{fondo_imprevistos}}</li>
+</ul>
 
 {% endblock %}

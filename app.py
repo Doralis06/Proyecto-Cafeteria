@@ -534,8 +534,8 @@ def ventas():
         conn = conectar_seguro()
         c = conn.cursor()
 
-        fecha_inicio = request.form.get("fecha_inicio")
-        fecha_fin = request.form.get("fecha_fin")
+        fecha_inicio = request.form.get("fecha_inicio") if request.method == "POST" else request.args.get("fecha_inicio")
+        fecha_fin = request.form.get("fecha_fin") if request.method == "POST" else request.args.get("fecha_fin")
 
         query = "SELECT * FROM facturas"
         params = []
@@ -554,12 +554,67 @@ def ventas():
 
         total = sum(float(v[2]) for v in ventas) if ventas else 0
 
-        return render_template("ventas.html", ventas=ventas, total=total)
+        return render_template(
+            "ventas.html",
+            ventas=ventas,
+            total=total,
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin
+        )
 
     finally:
         if conn:
             conn.close()
 
+@app.route("/eliminar_venta/<int:id>")
+def eliminar_venta(id):
+    if "usuario" not in session:
+        return redirect("/")
+
+    conn = None
+    try:
+        conn = conectar_seguro()
+        c = conn.cursor()
+
+        c.execute("""
+            SELECT producto, cantidad
+            FROM detalle_factura
+            WHERE factura_id = ?
+        """, (id,))
+        detalles = c.fetchall()
+
+        if not detalles:
+            return "❌ No se encontró la venta o no tiene detalles."
+
+        for detalle in detalles:
+            nombre_detalle = detalle[0]
+            cantidad = int(detalle[1])
+
+            if " (" in nombre_detalle:
+                nombre_base = nombre_detalle.split(" (")[0]
+            else:
+                nombre_base = nombre_detalle
+
+            c.execute("""
+                UPDATE productos
+                SET stock = stock + ?
+                WHERE nombre = ?
+            """, (cantidad, nombre_base))
+
+        c.execute("DELETE FROM detalle_factura WHERE factura_id = ?", (id,))
+        c.execute("DELETE FROM facturas WHERE id = ?", (id,))
+
+        conn.commit()
+        return redirect("/ventas")
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return f"Error al eliminar la venta: {e}"
+
+    finally:
+        if conn:
+            conn.close()
 
 @app.route("/estadisticas")
 def estadisticas():
@@ -771,4 +826,4 @@ def ver_cierre(id):
 
 # ---------------- EJECUCIÓN ----------------
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True)

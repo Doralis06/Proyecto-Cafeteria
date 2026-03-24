@@ -96,7 +96,8 @@
 
     .btn-principal,
     .btn-secundario,
-    .btn-ver{
+    .btn-ver,
+    .btn-eliminar{
         border:none;
         text-decoration:none;
         cursor:pointer;
@@ -180,7 +181,7 @@
     .tabla-ventas{
         width:100%;
         border-collapse:collapse;
-        min-width:700px;
+        min-width:980px;
     }
 
     .tabla-ventas th{
@@ -203,6 +204,13 @@
         background:#fffaf6;
     }
 
+    .acciones-tabla{
+        display:flex;
+        justify-content:center;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+
     .btn-ver{
         display:inline-block;
         background:#d8a06a;
@@ -215,6 +223,20 @@
     .btn-ver:hover{
         transform:translateY(-2px);
         background:#c7905f;
+    }
+
+    .btn-eliminar{
+        display:inline-block;
+        background:#c94f4f;
+        color:white;
+        padding:10px 14px;
+        border-radius:12px;
+        font-weight:600;
+    }
+
+    .btn-eliminar:hover{
+        transform:translateY(-2px);
+        background:#b84040;
     }
 
     .sin-datos{
@@ -274,12 +296,22 @@
         <form method="POST" class="filtro-form">
             <div class="campo">
                 <label for="fecha_inicio">📅 Fecha desde</label>
-                <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ request.form.get('fecha_inicio', '') }}">
+                <input
+                    type="date"
+                    id="fecha_inicio"
+                    name="fecha_inicio"
+                    value="{{ fecha_inicio if fecha_inicio else '' }}"
+                >
             </div>
 
             <div class="campo">
                 <label for="fecha_fin">📅 Fecha hasta</label>
-                <input type="date" id="fecha_fin" name="fecha_fin" value="{{ request.form.get('fecha_fin', '') }}">
+                <input
+                    type="date"
+                    id="fecha_fin"
+                    name="fecha_fin"
+                    value="{{ fecha_fin if fecha_fin else '' }}"
+                >
             </div>
 
             <div class="acciones-filtro">
@@ -312,6 +344,8 @@
                     <th>ID</th>
                     <th>Fecha</th>
                     <th>Total</th>
+                    <th>Pagó con</th>
+                    <th>Devuelta</th>
                     <th>Acción</th>
                 </tr>
             </thead>
@@ -322,14 +356,25 @@
                         <td>{{ v[0] }}</td>
                         <td>{{ v[1] }}</td>
                         <td>RD$ {{ "%.2f"|format(v[2] or 0) }}</td>
+                        <td>RD$ {{ "%.2f"|format(v[3] or 0) }}</td>
+                        <td>RD$ {{ "%.2f"|format(v[4] or 0) }}</td>
                         <td>
-                            <a href="/factura/{{ v[0] }}" class="btn-ver">🧾 Ver factura</a>
+                            <div class="acciones-tabla">
+                                <a href="/factura/{{ v[0] }}" class="btn-ver">🧾 Ver factura</a>
+                                <a
+                                    href="/eliminar_venta/{{ v[0] }}"
+                                    class="btn-eliminar"
+                                    onclick="return confirm('¿Seguro que deseas eliminar esta venta? También se devolverá el stock al inventario.')"
+                                >
+                                    🗑 Eliminar
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="4" class="sin-datos">No hay ventas registradas en ese rango.</td>
+                        <td colspan="6" class="sin-datos">No hay ventas registradas en ese rango.</td>
                     </tr>
                 {% endif %}
             </tbody>

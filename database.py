@@ -1,14 +1,14 @@
-import sqlite3
-
+import os
+import psycopg2
+from urllib.parse import urlparse
 
 def conectar():
-    conn = sqlite3.connect("cafeteria.db", timeout=30)
-    return conn
+    database_url = os.getenv("DATABASE_URL")
 
+    if not database_url:
+        raise ValueError("No se encontró DATABASE_URL")
 
-def crear_bd():
-    conn = conectar()
-    c = conn.cursor()
+    return psycopg2.connect(database_url)
 
     # ---------------- USUARIOS ----------------
     c.execute("""

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="/static/css/style.css">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login Cafetería</title>
+
+<style>
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+background:linear-gradient(135deg,#6b4226,#a47148);
+font-family:Arial;
+margin:0;
+}
+
+.box{
+background:white;
+padding:40px;
+border-radius:15px;
+box-shadow:0px 10px 25px rgba(0,0,0,0.2);
+width:300px;
+text-align:center;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:10px;
+background:#6b4226;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+background:#4e2e1e;
+}
+
+.error{
+color:red;
+margin-top:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>☕ Cafetería Login</h2>
+
+<form method="POST">
+
+<label for="username">Usuario</label>
+<input id="username" type="text" name="username" placeholder="Ingrese usuario" required>
+
+<label for="password">Contraseña</label>
+<input id="password" type="password" name="password" placeholder="Ingrese contraseña" required>
+
+<button type="submit">Entrar</button>
+
+</form>
+
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+</div>
+
+</body>
+</html>

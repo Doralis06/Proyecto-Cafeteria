@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario - Cafetería La Curva{% endblock %}
+
+{% block content %}
+
+<h2>📦 Inventario Inteligente</h2>
+
+<div class="form-box">
+    <h3>➕ Agregar producto</h3>
+
+    <form method="POST">
+        <div class="fila">
+            <div>
+                <label for="nombre">Nombre del producto</label>
+                <input type="text" id="nombre" name="nombre" required>
+            </div>
+
+            <div>
+                <label for="tipo">Tipo de producto</label>
+                <select id="tipo" name="tipo" required onchange="cambiarCamposPrecio()">
+                    <option value="">Seleccione una categoría</option>
+                    <option value="Desayuno">Desayuno</option>
+                    <option value="Jugos">Jugos</option>
+                    <option value="Batidas">Batidas</option>
+                    <option value="Sandwich">Sandwich</option>
+                    <option value="Arepas">Arepas</option>
+                    <option value="General">General</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="stock">Stock</label>
+                <input type="number" id="stock" name="stock" required>
+            </div>
+        </div>
+
+        <div class="fila" id="precio_normal_box">
+            <div>
+                <label for="precio">Precio normal</label>
+                <input type="number" step="0.01" id="precio" name="precio" placeholder="Ej: 75">
+            </div>
+        </div>
+
+        <div class="fila" id="precio_jugos_box" style="display:none;">
+            <div>
+                <label for="precio_pequeno">Precio pequeño</label>
+                <input type="number" step="0.01" id="precio_pequeno" name="precio_pequeno" placeholder="Ej: 50">
+            </div>
+
+            <div>
+                <label for="precio_grande">Precio grande</label>
+                <input type="number" step="0.01" id="precio_grande" name="precio_grande" placeholder="Ej: 65">
+            </div>
+        </div>
+
+        <div class="acciones">
+            <button type="submit">💾 Guardar producto</button>
+        </div>
+    </form>
+</div>
+
+{% if mensaje %}
+<div class="resultado {% if tipo_mensaje == 'ok' %}cuadrada{% else %}sobrante{% endif %}">
+    {{ mensaje }}
+</div>
+{% endif %}
+
+<div class="tabla-box">
+    <h3>📋 Lista de productos</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% if productos %}
+                {% for p in productos %}
+                <tr>
+                    <td>{{ p[0] }}</td>
+                    <td>{{ p[4] }}</td>
+                    <td>{{ p[1] }}</td>
+                    <td>
+                        {% if p[4] == "Jugos" %}
+                            Peq: RD$ {{ p[5] }}<br>
+                            Gra: RD$ {{ p[6] }}
+                        {% else %}
+                            RD$ {{ p[2] }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if p[3] <= 5 %}
+                            <span class="stock-bajo">{{ p[3] }} ⚠️</span>
+                        {% else %}
+                            {{ p[3] }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a class="link-btn" href="/editar_producto/{{ p[0] }}">✏️ Editar</a>
+                        <a class="link-btn sec" href="/eliminar_producto/{{ p[0] }}">🗑 Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6">No hay productos registrados.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function cambiarCamposPrecio() {
+    const tipo = document.getElementById("tipo").value;
+    const normalBox = document.getElementById("precio_normal_box");
+    const jugosBox = document.getElementById("precio_jugos_box");
+
+    if (tipo === "Jugos") {
+        normalBox.style.display = "none";
+        jugosBox.style.display = "grid";
+    } else {
+        normalBox.style.display = "grid";
+        jugosBox.style.display = "none";
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cierre de Caja</title>
+<link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f4f4;
+            padding:20px;
+        }
+
+        .ticket{
+            max-width:750px;
+            margin:auto;
+            background:white;
+            padding:30px;
+            border-radius:15px;
+            box-shadow:0px 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h1,h2{
+            text-align:center;
+            color:#6b4226;
+        }
+
+        .info p{
+            margin:6px 0;
+            font-size:16px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:15px;
+        }
+
+        th, td{
+            border:1px solid #ddd;
+            padding:10px;
+            text-align:center;
+        }
+
+        th{
+            background:#6b4226;
+            color:white;
+        }
+
+        .obs{
+            margin-top:20px;
+            background:#fdf7f3;
+            padding:15px;
+            border-left:5px solid #6b4226;
+            border-radius:8px;
+        }
+
+        .acciones{
+            text-align:center;
+            margin-top:20px;
+        }
+
+        button, a{
+            background:#6b4226;
+            color:white;
+            border:none;
+            padding:10px 15px;
+            border-radius:8px;
+            cursor:pointer;
+            text-decoration:none;
+            margin:5px;
+        }
+
+        @media print{
+            .acciones{
+                display:none;
+            }
+            body{
+                background:white;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ticket">
+
+    <h1>💼 Cierre de Caja</h1>
+    <h2>Cafetería</h2>
+
+    <div class="info">
+        <p><strong>ID:</strong> {{ cierre.id }}</p>
+        <p><strong>Fecha:</strong> {{ cierre.fecha_cierre }}</p>
+        <p><strong>Total sistema:</strong> RD$ {{ cierre.total_sistema }}</p>
+        <p><strong>Total contado:</strong> RD$ {{ cierre.total_real }}</p>
+        <p><strong>Diferencia:</strong> RD$ {{ cierre.diferencia }}</p>
+        <p><strong>Estado:</strong> {{ cierre.estado }}</p>
+        <p><strong>Usuario:</strong> {{ cierre.usuario }}</p>
+        <p><strong>Registrado:</strong> {{ cierre.creado_en }}</p>
+    </div>
+
+    <h3>💵 Desglose de dinero</h3>
+
+    <table>
+        <tr>
+            <th>Denominación</th>
+            <th>Cantidad</th>
+            <th>Subtotal</th>
+        </tr>
+
+        <tr><td>5</td><td>{{ cierre.cant_5 }}</td><td>{{ cierre.cant_5 * 5 }}</td></tr>
+        <tr><td>10</td><td>{{ cierre.cant_10 }}</td><td>{{ cierre.cant_10 * 10 }}</td></tr>
+        <tr><td>25</td><td>{{ cierre.cant_25 }}</td><td>{{ cierre.cant_25 * 25 }}</td></tr>
+        <tr><td>50</td><td>{{ cierre.cant_50 }}</td><td>{{ cierre.cant_50 * 50 }}</td></tr>
+        <tr><td>100</td><td>{{ cierre.cant_100 }}</td><td>{{ cierre.cant_100 * 100 }}</td></tr>
+        <tr><td>200</td><td>{{ cierre.cant_200 }}</td><td>{{ cierre.cant_200 * 200 }}</td></tr>
+        <tr><td>500</td><td>{{ cierre.cant_500 }}</td><td>{{ cierre.cant_500 * 500 }}</td></tr>
+        <tr><td>1000</td><td>{{ cierre.cant_1000 }}</td><td>{{ cierre.cant_1000 * 1000 }}</td></tr>
+        <tr><td>2000</td><td>{{ cierre.cant_2000 }}</td><td>{{ cierre.cant_2000 * 2000 }}</td></tr>
+    </table>
+
+    <div class="obs">
+        <strong>📝 Observaciones:</strong><br>
+        {{ cierre.observaciones if cierre.observaciones else "Sin observaciones" }}
+    </div>
+
+    <div class="acciones">
+        <button onclick="window.print()">🖨 Imprimir</button>
+        <a href="/caja">⬅ Volver</a>
+    </div>
+
+</div>
+
+</body>
+</html>

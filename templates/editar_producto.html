@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Producto - Cafetería La Curva{% endblock %}
+
+{% block content %}
+
+<h2>✏️ Editar producto</h2>
+
+<div class="form-box">
+    <form method="POST" action="/actualizar_producto/{{ producto[0] }}">
+        <div class="fila">
+            <div>
+                <label for="nombre">Nombre del producto</label>
+                <input type="text" id="nombre" name="nombre" value="{{ producto[1] }}" required>
+            </div>
+
+            <div>
+                <label for="tipo">Tipo de producto</label>
+                <select id="tipo" name="tipo" required onchange="cambiarCamposPrecio()">
+                    <option value="Desayuno" {% if producto[4] == "Desayuno" %}selected{% endif %}>Desayuno</option>
+                    <option value="Jugos" {% if producto[4] == "Jugos" %}selected{% endif %}>Jugos</option>
+                    <option value="Batidas" {% if producto[4] == "Batidas" %}selected{% endif %}>Batidas</option>
+                    <option value="Sandwich" {% if producto[4] == "Sandwich" %}selected{% endif %}>Sandwich</option>
+                    <option value="Arepas" {% if producto[4] == "Arepas" %}selected{% endif %}>Arepas</option>
+                    <option value="General" {% if producto[4] == "General" %}selected{% endif %}>General</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="stock">Stock</label>
+                <input type="number" id="stock" name="stock" value="{{ producto[3] }}" required>
+            </div>
+        </div>
+
+        <div class="fila" id="precio_normal_box">
+            <div>
+                <label for="precio">Precio normal</label>
+                <input type="number" step="0.01" id="precio" name="precio" value="{{ producto[2] }}">
+            </div>
+        </div>
+
+        <div class="fila" id="precio_jugos_box" style="display:none;">
+            <div>
+                <label for="precio_pequeno">Precio pequeño</label>
+                <input type="number" step="0.01" id="precio_pequeno" name="precio_pequeno" value="{{ producto[5] }}">
+            </div>
+
+            <div>
+                <label for="precio_grande">Precio grande</label>
+                <input type="number" step="0.01" id="precio_grande" name="precio_grande" value="{{ producto[6] }}">
+            </div>
+        </div>
+
+        <div class="acciones">
+            <button type="submit">✅ Actualizar producto</button>
+            <a class="link-btn sec" href="/productos">⬅ Volver</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function cambiarCamposPrecio() {
+    const tipo = document.getElementById("tipo").value;
+    const normalBox = document.getElementById("precio_normal_box");
+    const jugosBox = document.getElementById("precio_jugos_box");
+
+    if (tipo === "Jugos") {
+        normalBox.style.display = "none";
+        jugosBox.style.display = "grid";
+    } else {
+        normalBox.style.display = "grid";
+        jugosBox.style.display = "none";
+    }
+}
+
+window.addEventListener("DOMContentLoaded", cambiarCamposPrecio);
+</script>
+
+{% endblock %}

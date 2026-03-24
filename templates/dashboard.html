@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Cafetería</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+        }
+
+        header {
+            background: linear-gradient(135deg, #6b4226, #8b5e3c);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            background: #fdf7f3;
+        }
+
+        a {
+            text-decoration: none;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    ☕ Panel de Control Inteligente - Cafetería
+</header>
+
+<div class="container">
+    <h2>Bienvenido al sistema</h2>
+
+    <div class="menu">
+
+        <!-- 📈 GRÁFICAS -->
+        <a href="/graficas">
+            <div class="card">
+                📈 Gráficas
+            </div>
+        </a>
+
+        <!-- 📦 INVENTARIO -->
+        <a href="/productos">
+            <div class="card">
+                📦 Inventario
+            </div>
+        </a>
+
+        <!-- 💸 FACTURACIÓN -->
+        <a href="/facturacion">
+            <div class="card">
+                💸 Facturación
+            </div>
+        </a>
+
+        <!-- 📊 VENTAS -->
+        <a href="/ventas">
+            <div class="card">
+                📊 Ventas
+            </div>
+        </a>
+
+        <!-- 📑 REPORTES -->
+        <a href="/reportes">
+            <div class="card">
+                📑 Reportes
+            </div>
+        </a>
+
+        <!-- 🧠 ESTADÍSTICAS (UNA SOLA, CORREGIDO) -->
+        <a href="/estadisticas">
+            <div class="card">
+                🧠 Estadísticas Pro
+            </div>
+        </a>
+
+        <!-- 🚪 LOGOUT -->
+        <a href="/logout">
+            <div class="card">
+                🚪 Cerrar sesión
+            </div>
+        </a>
+
+        <a href="/caja">
+    <div class="card">
+        💼 Caja
+    </div>
+</a>
+    </div>
+</div>
+
+</body>
+</html>

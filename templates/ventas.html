@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Ventas - Cafetería La Curva{% endblock %}
+
+{% block content %}
+
+<style>
+    .ventas-wrap{
+        display:flex;
+        flex-direction:column;
+        gap:24px;
+    }
+
+    .ventas-hero{
+        background: linear-gradient(135deg, #fff8f2, #f8efe8);
+        border-radius:24px;
+        padding:28px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        flex-wrap:wrap;
+    }
+
+    .ventas-hero h1{
+        margin:0 0 8px 0;
+        color:#6b4226;
+        font-size:32px;
+    }
+
+    .ventas-hero p{
+        margin:0;
+        color:#7a685b;
+        font-size:15px;
+    }
+
+    .ventas-badge{
+        background:white;
+        color:#6b4226;
+        padding:12px 18px;
+        border-radius:999px;
+        font-weight:bold;
+        box-shadow:0 6px 18px rgba(0,0,0,0.07);
+    }
+
+    .filtro-card{
+        background:white;
+        border-radius:22px;
+        padding:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .filtro-card h3{
+        margin:0 0 18px 0;
+        color:#6b4226;
+    }
+
+    .filtro-form{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:18px;
+        align-items:end;
+    }
+
+    .campo{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .campo label{
+        font-weight:600;
+        color:#5f5147;
+    }
+
+    .campo input{
+        padding:12px 14px;
+        border:1px solid #e4d7cc;
+        border-radius:14px;
+        outline:none;
+        font-size:14px;
+        background:#fffdfa;
+    }
+
+    .campo input:focus{
+        border-color:#c99872;
+        box-shadow:0 0 0 3px rgba(201,152,114,0.15);
+    }
+
+    .acciones-filtro{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .btn-principal,
+    .btn-secundario,
+    .btn-ver{
+        border:none;
+        text-decoration:none;
+        cursor:pointer;
+        transition:0.2s ease;
+    }
+
+    .btn-principal{
+        background:#6b4226;
+        color:white;
+        padding:12px 18px;
+        border-radius:14px;
+        font-weight:600;
+    }
+
+    .btn-principal:hover{
+        transform:translateY(-2px);
+        background:#7a4b2b;
+    }
+
+    .btn-secundario{
+        background:#eee7e1;
+        color:#5b4636;
+        padding:12px 18px;
+        border-radius:14px;
+        font-weight:600;
+    }
+
+    .btn-secundario:hover{
+        transform:translateY(-2px);
+        background:#e4d8cf;
+    }
+
+    .resumen-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:18px;
+    }
+
+    .resumen-card{
+        background:white;
+        border-radius:22px;
+        padding:22px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .resumen-card span{
+        display:block;
+        color:#8a7a6d;
+        margin-bottom:8px;
+        font-size:14px;
+    }
+
+    .resumen-card h2{
+        margin:0;
+        color:#6b4226;
+        font-size:28px;
+    }
+
+    .tabla-card{
+        background:white;
+        border-radius:22px;
+        padding:20px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        overflow-x:auto;
+    }
+
+    .tabla-header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        margin-bottom:16px;
+        flex-wrap:wrap;
+    }
+
+    .tabla-header h3{
+        margin:0;
+        color:#6b4226;
+    }
+
+    .tabla-ventas{
+        width:100%;
+        border-collapse:collapse;
+        min-width:700px;
+    }
+
+    .tabla-ventas th{
+        background:#faf5f0;
+        color:#6b4226;
+        font-weight:700;
+        padding:14px;
+        text-align:center;
+        border-bottom:1px solid #eadfd6;
+    }
+
+    .tabla-ventas td{
+        padding:14px;
+        text-align:center;
+        border-bottom:1px solid #f0e7e0;
+        color:#4d4038;
+    }
+
+    .tabla-ventas tr:hover{
+        background:#fffaf6;
+    }
+
+    .btn-ver{
+        display:inline-block;
+        background:#d8a06a;
+        color:white;
+        padding:10px 14px;
+        border-radius:12px;
+        font-weight:600;
+    }
+
+    .btn-ver:hover{
+        transform:translateY(-2px);
+        background:#c7905f;
+    }
+
+    .sin-datos{
+        text-align:center;
+        padding:24px;
+        color:#7a6d63;
+        font-weight:600;
+    }
+
+    .volver-box{
+        display:flex;
+        justify-content:flex-start;
+    }
+
+    .volver-link{
+        text-decoration:none;
+        background:#eee7e1;
+        color:#5b4636;
+        padding:12px 18px;
+        border-radius:14px;
+        font-weight:600;
+        transition:0.2s ease;
+    }
+
+    .volver-link:hover{
+        transform:translateY(-2px);
+        background:#e4d8cf;
+    }
+
+    @media (max-width: 768px){
+        .ventas-hero h1{
+            font-size:26px;
+        }
+
+        .resumen-card h2{
+            font-size:24px;
+        }
+    }
+</style>
+
+<div class="ventas-wrap">
+
+    <div class="ventas-hero">
+        <div>
+            <h1>📊 Ventas</h1>
+            <p>Aquí puedes ver tus ventas registradas, filtrarlas por fecha y abrir cada factura cuando la necesites.</p>
+        </div>
+
+        <div class="ventas-badge">
+            Total general: RD$ {{ "%.2f"|format(total or 0) }}
+        </div>
+    </div>
+
+    <div class="filtro-card">
+        <h3>🔎 Filtrar ventas</h3>
+
+        <form method="POST" class="filtro-form">
+            <div class="campo">
+                <label for="fecha_inicio">📅 Fecha desde</label>
+                <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ request.form.get('fecha_inicio', '') }}">
+            </div>
+
+            <div class="campo">
+                <label for="fecha_fin">📅 Fecha hasta</label>
+                <input type="date" id="fecha_fin" name="fecha_fin" value="{{ request.form.get('fecha_fin', '') }}">
+            </div>
+
+            <div class="acciones-filtro">
+                <button type="submit" class="btn-principal">Buscar</button>
+                <a href="/ventas" class="btn-secundario">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="resumen-grid">
+        <div class="resumen-card">
+            <span>Total vendido</span>
+            <h2>RD$ {{ "%.2f"|format(total or 0) }}</h2>
+        </div>
+
+        <div class="resumen-card">
+            <span>Cantidad de ventas</span>
+            <h2>{{ ventas|length }}</h2>
+        </div>
+    </div>
+
+    <div class="tabla-card">
+        <div class="tabla-header">
+            <h3>🧾 Lista de ventas</h3>
+        </div>
+
+        <table class="tabla-ventas">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if ventas %}
+                    {% for v in ventas %}
+                    <tr>
+                        <td>{{ v[0] }}</td>
+                        <td>{{ v[1] }}</td>
+                        <td>RD$ {{ "%.2f"|format(v[2] or 0) }}</td>
+                        <td>
+                            <a href="/factura/{{ v[0] }}" class="btn-ver">🧾 Ver factura</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="sin-datos">No hay ventas registradas en ese rango.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="volver-box">
+        <a href="/dashboard" class="volver-link">⬅ Volver</a>
+    </div>
+
+</div>
+
+{% endblock %}

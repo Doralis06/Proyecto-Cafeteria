@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura</title>
+<link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #6b4226;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #6b4226;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🧾 Factura #{{ factura[0] }}</h1>
+<p>Fecha: {{ factura[1] }}</p>
+<p>Total: RD$ {{ factura[2] }}</p>
+
+<h2>Detalle</h2>
+
+<table>
+    <tr>
+        <th>Producto</th>
+        <th>Cantidad</th>
+        <th>Precio</th>
+        <th>Subtotal</th>
+    </tr>
+
+    {% for d in detalles %}
+    <tr>
+        <td>{{ d[2] }}</td>
+        <td>{{ d[3] }}</td>
+        <td>{{ d[4] }}</td>
+        <td>{{ d[5] }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+<br>
+<a href="/facturacion">⬅ Volver</a>
+
+</body>
+</html>

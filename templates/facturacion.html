@@ -1,0 +1,591 @@
+{% extends "base.html" %}
+
+{% block title %}Facturación POS - Cafetería La Curva{% endblock %}
+
+{% block content %}
+
+<h2>💸 Facturación POS</h2>
+
+<div class="pos-layout">
+
+    <div class="pos-left">
+
+        <div class="form-box">
+            <h3>🔎 Buscar producto</h3>
+            <label for="buscarProducto">Buscar por nombre</label>
+            <input
+                type="text"
+                id="buscarProducto"
+                name="buscarProducto"
+                placeholder="Ej: jugo de chinola"
+                title="Buscar producto por nombre"
+            >
+        </div>
+
+        <div class="form-box">
+            <h3>📂 Categorías</h3>
+            <div class="categorias">
+                <button type="button" class="categoria-btn active" data-categoria="Todos">Todos</button>
+                <button type="button" class="categoria-btn" data-categoria="Desayuno">Desayuno</button>
+                <button type="button" class="categoria-btn" data-categoria="Jugos">Jugos</button>
+                <button type="button" class="categoria-btn" data-categoria="Batidas">Batidas</button>
+                <button type="button" class="categoria-btn" data-categoria="Sandwich">Sandwich</button>
+                <button type="button" class="categoria-btn" data-categoria="Arepas">Arepas</button>
+                <button type="button" class="categoria-btn" data-categoria="General">General</button>
+            </div>
+        </div>
+
+        <div class="productos-grid" id="productosGrid">
+            {% for p in productos %}
+            <div
+                class="producto-card"
+                id="producto-{{ p[0] }}"
+                data-id="{{ p[0] }}"
+                data-nombre="{{ p[1] }}"
+                data-precio="{{ p[2] }}"
+                data-stock="{{ p[3] }}"
+                data-tipo="{{ p[4] if p|length > 4 else 'General' }}"
+                data-precio-pequeno="{{ p[5] if p|length > 5 else 0 }}"
+                data-precio-grande="{{ p[6] if p|length > 6 else 0 }}"
+            >
+                <div class="producto-tipo">
+                    {{ p[4] if p|length > 4 else 'General' }}
+                </div>
+
+                <h4>{{ p[1] }}</h4>
+
+                {% if p[4] == "Jugos" %}
+                    <p><strong>Pequeño:</strong> RD$ {{ p[5] }}</p>
+                    <p><strong>Grande:</strong> RD$ {{ p[6] }}</p>
+
+                    <label for="tamano-{{ p[0] }}">Tamaño</label>
+                    <select
+                        id="tamano-{{ p[0] }}"
+                        name="tamano-{{ p[0] }}"
+                        title="Selecciona el tamaño del jugo {{ p[1] }}"
+                    >
+                        <option value="pequeno">Pequeño</option>
+                        <option value="grande">Grande</option>
+                    </select>
+                {% else %}
+                    <p><strong>Precio:</strong> RD$ {{ p[2] }}</p>
+                {% endif %}
+
+                <p><strong>Stock:</strong> {{ p[3] }}</p>
+
+                <div class="producto-actions">
+                    <div class="cantidad-box">
+                        <label for="cant-{{ p[0] }}">Cantidad</label>
+                        <input
+                            type="number"
+                            min="1"
+                            value="1"
+                            class="cantidad-input"
+                            id="cant-{{ p[0] }}"
+                            name="cant-{{ p[0] }}"
+                            placeholder="Cantidad"
+                            title="Cantidad del producto {{ p[1] }}"
+                        >
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn-agregar-producto"
+                        data-id="{{ p[0] }}"
+                    >
+                        ➕ Agregar
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <div class="pos-right">
+        <div class="card sticky-card">
+            <h3>🧾 Carrito</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cant.</th>
+                        <th>Precio</th>
+                        <th>Sub.</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="carritoBody">
+                    <tr id="filaVacia">
+                        <td colspan="5">No hay productos agregados.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-box">
+                <p><strong>Items:</strong> <span id="cantidadItems">0</span></p>
+                <h2>Total: RD$ <span id="totalGeneral">0.00</span></h2>
+            </div>
+
+            <div class="pago-box">
+                <label for="pagoCon"><strong>💵 Pago con</strong></label>
+                <input
+                    type="number"
+                    id="pagoCon"
+                    name="pagoCon"
+                    min="0"
+                    step="0.01"
+                    value=""
+                    placeholder="Ej: 500"
+                    title="Monto pagado por el cliente"
+                >
+
+                <div class="pago-resumen">
+                    <p><strong>Devuelta:</strong> RD$ <span id="devuelta">0.00</span></p>
+                    <p id="mensajePago" class="mensaje-pago"></p>
+                </div>
+            </div>
+
+            <div class="acciones">
+                <button type="button" id="btnFacturar">✅ Facturar</button>
+                <button type="button" class="link-btn sec" id="btnVaciar">🗑 Vaciar</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.pos-layout{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:20px;
+}
+
+.pos-left,
+.pos-right{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.categorias{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.categoria-btn{
+    background:#eee;
+    color:#333;
+}
+
+.categoria-btn.active{
+    background:#6b4226;
+    color:white;
+}
+
+.productos-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:18px;
+}
+
+.producto-card{
+    background:white;
+    border-radius:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.08);
+    padding:18px;
+    transition:0.2s;
+}
+
+.producto-card:hover{
+    transform:translateY(-3px);
+    background:#fdf7f3;
+}
+
+.producto-card h4{
+    margin:10px 0;
+    color:#6b4226;
+}
+
+.producto-tipo{
+    display:inline-block;
+    background:#f0e5dc;
+    color:#6b4226;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.producto-actions{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+    align-items:end;
+    flex-wrap:wrap;
+}
+
+.cantidad-box{
+    min-width:90px;
+}
+
+.cantidad-input{
+    width:100%;
+}
+
+.total-box{
+    margin-top:20px;
+    padding:15px;
+    border-radius:12px;
+    background:#f6f3ef;
+}
+
+.pago-box{
+    margin-top:15px;
+    padding:15px;
+    border-radius:12px;
+    background:#fff8f2;
+    border:1px solid #f0e5dc;
+}
+
+.pago-box input{
+    width:100%;
+    margin-top:8px;
+}
+
+.pago-resumen{
+    margin-top:12px;
+}
+
+.mensaje-pago{
+    margin-top:6px;
+    font-weight:bold;
+    color:#6b4226;
+}
+
+.sticky-card{
+    position:sticky;
+    top:20px;
+}
+
+.btn-quitar{
+    background:#c62828;
+    color:white;
+    border:none;
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+@media (max-width: 900px){
+    .pos-layout{
+        grid-template-columns:1fr;
+    }
+
+    .sticky-card{
+        position:static;
+    }
+}
+</style>
+
+<script>
+let carrito = [];
+let categoriaActual = "Todos";
+
+function obtenerCards() {
+    return document.querySelectorAll(".producto-card");
+}
+
+function marcarCategoriaActiva(botonActual) {
+    document.querySelectorAll(".categoria-btn").forEach(function(btn) {
+        btn.classList.remove("active");
+    });
+    botonActual.classList.add("active");
+}
+
+function filtrarCategoria(categoria, botonActual) {
+    categoriaActual = categoria;
+    marcarCategoriaActiva(botonActual);
+    aplicarFiltros();
+}
+
+function aplicarFiltros() {
+    const texto = document.getElementById("buscarProducto").value.toLowerCase();
+
+    obtenerCards().forEach(function(card) {
+        const nombre = card.dataset.nombre.toLowerCase();
+        const tipo = card.dataset.tipo;
+
+        const coincideTexto = nombre.includes(texto);
+        const coincideCategoria = categoriaActual === "Todos" || tipo === categoriaActual;
+
+        card.style.display = (coincideTexto && coincideCategoria) ? "block" : "none";
+    });
+}
+
+function agregarDesdeCard(id) {
+    const card = document.getElementById("producto-" + id);
+
+    if (!card) {
+        alert("No se encontró el producto.");
+        return;
+    }
+
+    const nombreBase = card.dataset.nombre;
+    const tipo = card.dataset.tipo;
+    const stock = parseInt(card.dataset.stock);
+    const cantidadInput = document.getElementById("cant-" + id);
+    const cantidad = parseInt(cantidadInput.value);
+
+    if (!cantidad || cantidad <= 0) {
+        alert("La cantidad debe ser mayor que 0.");
+        return;
+    }
+
+    if (cantidad > stock) {
+        alert("No hay suficiente stock disponible.");
+        return;
+    }
+
+    let precio = 0;
+    let nombreMostrar = nombreBase;
+
+    if (tipo === "Jugos") {
+        const tamano = document.getElementById("tamano-" + id).value;
+
+        if (tamano === "pequeno") {
+            precio = parseFloat(card.dataset.precioPequeno || 0);
+            nombreMostrar = nombreBase + " (Pequeño)";
+        } else {
+            precio = parseFloat(card.dataset.precioGrande || 0);
+            nombreMostrar = nombreBase + " (Grande)";
+        }
+    } else {
+        precio = parseFloat(card.dataset.precio || 0);
+    }
+
+    if (precio <= 0) {
+        alert("Este producto no tiene precio configurado.");
+        return;
+    }
+
+    const existente = carrito.find(function(item) {
+        return item.nombre === nombreMostrar;
+    });
+
+    if (existente) {
+        if ((existente.cantidad + cantidad) > stock) {
+            alert("La cantidad total supera el stock disponible.");
+            return;
+        }
+
+        existente.cantidad += cantidad;
+        existente.subtotal = existente.cantidad * existente.precio;
+    } else {
+        carrito.push({
+            id: id,
+            nombre: nombreMostrar,
+            producto_base: nombreBase,
+            precio: precio,
+            cantidad: cantidad,
+            subtotal: precio * cantidad
+        });
+    }
+
+    cantidadInput.value = 1;
+    renderCarrito();
+}
+
+function eliminarProducto(index) {
+    carrito.splice(index, 1);
+    renderCarrito();
+}
+
+function renderCarrito() {
+    const body = document.getElementById("carritoBody");
+    body.innerHTML = "";
+
+    if (carrito.length === 0) {
+        body.innerHTML = '<tr id="filaVacia"><td colspan="5">No hay productos agregados.</td></tr>';
+    } else {
+        carrito.forEach(function(item, index) {
+            const fila = document.createElement("tr");
+
+            fila.innerHTML =
+                '<td>' + item.nombre + '</td>' +
+                '<td>' + item.cantidad + '</td>' +
+                '<td>RD$ ' + item.precio.toFixed(2) + '</td>' +
+                '<td>RD$ ' + item.subtotal.toFixed(2) + '</td>' +
+                '<td><button type="button" class="btn-quitar" data-index="' + index + '">❌</button></td>';
+
+            body.appendChild(fila);
+        });
+    }
+
+    actualizarResumen();
+    enlazarBotonesQuitar();
+}
+
+function enlazarBotonesQuitar() {
+    document.querySelectorAll(".btn-quitar").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            const index = parseInt(this.dataset.index);
+            eliminarProducto(index);
+        });
+    });
+}
+
+function actualizarResumen() {
+    const total = carrito.reduce(function(acc, item) {
+        return acc + item.subtotal;
+    }, 0);
+
+    const items = carrito.reduce(function(acc, item) {
+        return acc + item.cantidad;
+    }, 0);
+
+    document.getElementById("totalGeneral").textContent = total.toFixed(2);
+    document.getElementById("cantidadItems").textContent = items;
+
+    calcularPago();
+}
+
+function calcularPago() {
+    const total = carrito.reduce(function(acc, item) {
+        return acc + item.subtotal;
+    }, 0);
+
+    const pagoConInput = document.getElementById("pagoCon");
+    const devueltaSpan = document.getElementById("devuelta");
+    const mensajePago = document.getElementById("mensajePago");
+
+    const pagoCon = parseFloat(pagoConInput.value) || 0;
+    const diferencia = pagoCon - total;
+
+    if (carrito.length === 0) {
+        devueltaSpan.textContent = "0.00";
+        mensajePago.textContent = "";
+        return;
+    }
+
+    if (pagoCon <= 0) {
+        devueltaSpan.textContent = "0.00";
+        mensajePago.textContent = "";
+        return;
+    }
+
+    if (diferencia >= 0) {
+        devueltaSpan.textContent = diferencia.toFixed(2);
+        mensajePago.textContent = "Pago suficiente.";
+    } else {
+        devueltaSpan.textContent = "0.00";
+        mensajePago.textContent = "Faltan RD$ " + Math.abs(diferencia).toFixed(2);
+    }
+}
+
+function vaciarCarrito() {
+    carrito = [];
+    document.getElementById("pagoCon").value = "";
+    document.getElementById("devuelta").textContent = "0.00";
+    document.getElementById("mensajePago").textContent = "";
+    renderCarrito();
+}
+
+function facturar() {
+    if (carrito.length === 0) {
+        alert("Agrega productos antes de facturar.");
+        return;
+    }
+
+    const total = carrito.reduce(function(acc, item) {
+        return acc + item.subtotal;
+    }, 0);
+
+    const pagoConInput = document.getElementById("pagoCon");
+    const pagoCon = parseFloat(pagoConInput.value) || 0;
+
+    if (pagoCon <= 0) {
+        alert("Debes escribir con cuánto te están pagando.");
+        pagoConInput.focus();
+        return;
+    }
+
+    if (pagoCon < total) {
+        alert("El monto pagado no es suficiente. Faltan RD$ " + (total - pagoCon).toFixed(2));
+        pagoConInput.focus();
+        return;
+    }
+
+    const productosEnviar = carrito.map(function(item) {
+        return {
+            id: item.id,
+            nombre: item.nombre,
+            producto_base: item.producto_base,
+            precio: item.precio,
+            cantidad: item.cantidad
+        };
+    });
+
+    fetch("/api/facturar", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            productos: productosEnviar,
+            pago_con: pagoCon
+        })
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        alert(
+            "✅ Factura realizada correctamente\n\n" +
+            "Factura #" + data.factura_id + "\n" +
+            "Total: RD$ " + Number(data.total).toFixed(2) + "\n" +
+            "Pagó con: RD$ " + Number(data.pago_con).toFixed(2) + "\n" +
+            "Devuelta: RD$ " + Number(data.devuelta).toFixed(2)
+        );
+
+        window.location.href = "/factura/" + data.factura_id;
+    })
+    .catch(function(error) {
+        console.error("Error al facturar:", error);
+        alert("Ocurrió un error al facturar.");
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("buscarProducto").addEventListener("input", aplicarFiltros);
+
+    document.querySelectorAll(".categoria-btn").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            filtrarCategoria(this.dataset.categoria, this);
+        });
+    });
+
+    document.querySelectorAll(".btn-agregar-producto").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            const id = parseInt(this.dataset.id);
+            agregarDesdeCard(id);
+        });
+    });
+
+    document.getElementById("btnVaciar").addEventListener("click", vaciarCarrito);
+    document.getElementById("btnFacturar").addEventListener("click", facturar);
+    document.getElementById("pagoCon").addEventListener("input", calcularPago);
+
+    renderCarrito();
+});
+</script>
+
+{% endblock %}

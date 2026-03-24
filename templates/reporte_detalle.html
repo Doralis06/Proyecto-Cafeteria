@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Reporte - Cafetería La Curva{% endblock %}
+
+{% block content %}
+<div class="detalle-wrap">
+
+    <div class="detalle-top no-print">
+        <a href="/reportes" class="btn-volver">⬅ Volver</a>
+        <div class="acciones-top">
+            <button onclick="window.print()" class="btn-print">🖨 Imprimir</button>
+            <button onclick="copiarResumen()" class="btn-send">📤 Copiar resumen</button>
+        </div>
+    </div>
+
+    <div class="reporte-hoja" id="reporteHoja">
+        <div class="cabecera">
+            <h2>☕ Cafetería La Curva</h2>
+            <p>Reporte diario de cierre</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <span>Fecha del cierre</span>
+                <h3>{{ reporte.fecha_cierre }}</h3>
+            </div>
+            <div class="info-card">
+                <span>Total sistema</span>
+                <h3>RD$ {{ "%.2f"|format(reporte.total_sistema or 0) }}</h3>
+            </div>
+            <div class="info-card">
+                <span>Total contado</span>
+                <h3>RD$ {{ "%.2f"|format(reporte.total_real or 0) }}</h3>
+            </div>
+            <div class="info-card">
+                <span>Diferencia</span>
+                <h3>RD$ {{ "%.2f"|format(reporte.diferencia or 0) }}</h3>
+            </div>
+        </div>
+
+        <div class="estado-box">
+            <strong>Estado:</strong>
+            <span class="estado estado-{{ reporte.estado }}">{{ reporte.estado|capitalize }}</span>
+        </div>
+
+        <div class="seccion">
+            <h3>💰 Desglose del efectivo</h3>
+            <div class="billetes-grid">
+                <div>RD$ 5: {{ reporte.cant_5 }}</div>
+                <div>RD$ 10: {{ reporte.cant_10 }}</div>
+                <div>RD$ 25: {{ reporte.cant_25 }}</div>
+                <div>RD$ 50: {{ reporte.cant_50 }}</div>
+                <div>RD$ 100: {{ reporte.cant_100 }}</div>
+                <div>RD$ 200: {{ reporte.cant_200 }}</div>
+                <div>RD$ 500: {{ reporte.cant_500 }}</div>
+                <div>RD$ 1000: {{ reporte.cant_1000 }}</div>
+                <div>RD$ 2000: {{ reporte.cant_2000 }}</div>
+            </div>
+        </div>
+
+        <div class="seccion">
+            <h3>🧾 Facturas del día</h3>
+            <table class="tabla-detalle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if facturas %}
+                        {% for f in facturas %}
+                        <tr>
+                            <td>{{ f[0] }}</td>
+                            <td>{{ f[1] }}</td>
+                            <td>RD$ {{ "%.2f"|format(f[2] or 0) }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3">No hay facturas registradas para este día.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="seccion">
+            <h3>📝 Observaciones</h3>
+            <div class="obs-box">
+                {{ reporte.observaciones if reporte.observaciones else 'Sin observaciones.' }}
+            </div>
+        </div>
+
+        <div class="pie">
+            <p><strong>Usuario:</strong> {{ reporte.usuario }}</p>
+            <p><strong>Guardado en:</strong> {{ reporte.creado_en }}</p>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.detalle-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.detalle-top{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.acciones-top{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn-volver,
+.btn-print,
+.btn-send{
+    border:none;
+    padding:10px 16px;
+    border-radius:12px;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.btn-volver{
+    background:#eee;
+    color:#333;
+}
+
+.btn-print{
+    background:#6b4226;
+    color:white;
+}
+
+.btn-send{
+    background:#d9a066;
+    color:white;
+}
+
+.reporte-hoja{
+    background:white;
+    border-radius:20px;
+    padding:28px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.06);
+}
+
+.cabecera{
+    text-align:center;
+    padding-bottom:18px;
+    border-bottom:1px solid #eee;
+}
+
+.cabecera h2{
+    margin:0;
+    color:#6b4226;
+}
+
+.cabecera p{
+    margin-top:8px;
+    color:#7a6d63;
+}
+
+.info-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:16px;
+    margin-top:20px;
+}
+
+.info-card{
+    background:#faf6f2;
+    border-radius:16px;
+    padding:18px;
+}
+
+.info-card span{
+    color:#7a6d63;
+    display:block;
+    margin-bottom:8px;
+}
+
+.info-card h3{
+    margin:0;
+    color:#6b4226;
+}
+
+.estado-box{
+    margin-top:20px;
+}
+
+.estado{
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.estado-cuadrada{
+    background:#e7f7ec;
+    color:#1f7a3f;
+}
+
+.estado-sobrante{
+    background:#eef4ff;
+    color:#2f5fb3;
+}
+
+.estado-faltante{
+    background:#fdecec;
+    color:#b23b3b;
+}
+
+.seccion{
+    margin-top:24px;
+}
+
+.billetes-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:12px;
+    margin-top:12px;
+}
+
+.billetes-grid div{
+    background:#faf6f2;
+    padding:14px;
+    border-radius:12px;
+}
+
+.tabla-detalle{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:12px;
+}
+
+.tabla-detalle th,
+.tabla-detalle td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    text-align:left;
+}
+
+.tabla-detalle th{
+    background:#faf6f2;
+    color:#6b4226;
+}
+
+.obs-box{
+    background:#faf6f2;
+    padding:16px;
+    border-radius:12px;
+    min-height:60px;
+}
+
+.pie{
+    margin-top:24px;
+    padding-top:16px;
+    border-top:1px solid #eee;
+    color:#6a5a4d;
+}
+
+@media print{
+    .no-print{
+        display:none !important;
+    }
+
+    body{
+        background:white;
+    }
+
+    .reporte-hoja{
+        box-shadow:none;
+        border-radius:0;
+        padding:0;
+    }
+}
+</style>
+
+<script>
+function copiarResumen() {
+    const texto = `
+Cafetería La Curva
+Reporte diario
+Fecha: {{ reporte.fecha_cierre }}
+Total sistema: RD$ {{ "%.2f"|format(reporte.total_sistema or 0) }}
+Total contado: RD$ {{ "%.2f"|format(reporte.total_real or 0) }}
+Diferencia: RD$ {{ "%.2f"|format(reporte.diferencia or 0) }}
+Estado: {{ reporte.estado|capitalize }}
+Usuario: {{ reporte.usuario }}
+Observaciones: {{ reporte.observaciones if reporte.observaciones else 'Sin observaciones.' }}
+    `.trim();
+
+    navigator.clipboard.writeText(texto)
+        .then(function() {
+            alert("Resumen copiado. Ya puedes pegarlo y enviarlo.");
+        })
+        .catch(function() {
+            alert("No se pudo copiar automáticamente.");
+        });
+}
+</script>
+{% endblock %}

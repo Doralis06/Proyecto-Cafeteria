@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas</title>
+<link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #6b4226;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0px 5px 10px rgba(0,0,0,0.1);
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 Estadísticas del Negocio</h1>
+
+<div class="card">
+    <h3>💰 Total Vendido</h3>
+    <p>RD$ {{ total }}</p>
+</div>
+
+<div class="card">
+    <h3>🧾 Cantidad de Ventas</h3>
+    <p>{{ cantidad }}</p>
+</div>
+
+<div class="card">
+    <h3>🏆 Producto Más Vendido</h3>
+    {% if producto_top %}
+        <p>{{ producto_top[0] }} ({{ producto_top[1] }} vendidos)</p>
+    {% else %}
+        <p>No hay datos</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>📅 Ventas por Día</h3>
+
+    {% if ventas_dia %}
+        <ul>
+            {% for v in ventas_dia %}
+                <li>{{ v[0] }} → RD$ {{ v[1] }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No hay ventas registradas</p>
+    {% endif %}
+
+</div>
+
+<br>
+<a href="/">⬅ Volver al dashboard</a>
+
+</body>
+</html>

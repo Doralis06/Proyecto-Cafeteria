@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes - Cafetería La Curva{% endblock %}
+
+{% block content %}
+<div class="reporte-wrap">
+
+    <div class="reporte-header">
+        <div>
+            <h2>📊 Reportes diarios</h2>
+            <p>Consulta los cierres ya realizados desde caja, busca por fecha y abre el reporte cuando lo necesites.</p>
+        </div>
+    </div>
+
+    <div class="filtros-box">
+        <form method="POST" class="filtros-form">
+            <div class="campo">
+                <label for="fecha_buscar">Buscar por día</label>
+                <input type="date" name="fecha_buscar" id="fecha_buscar" value="{{ fecha_buscar if fecha_buscar else '' }}">
+            </div>
+
+            <div class="acciones-filtro">
+                <button type="submit">🔍 Buscar</button>
+                <a href="/reportes" class="btn-sec">🧹 Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="resumen-grid">
+        <div class="resumen-card">
+            <span>Total reportado</span>
+            <h3>RD$ {{ "%.2f"|format(total_reportado) }}</h3>
+        </div>
+        <div class="resumen-card">
+            <span>Total contado</span>
+            <h3>RD$ {{ "%.2f"|format(total_real) }}</h3>
+        </div>
+        <div class="resumen-card">
+            <span>Reportes encontrados</span>
+            <h3>{{ reportes|length }}</h3>
+        </div>
+    </div>
+
+    <div class="tabla-box">
+        <table class="tabla-reportes">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Total sistema</th>
+                    <th>Total real</th>
+                    <th>Diferencia</th>
+                    <th>Estado</th>
+                    <th>Usuario</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if reportes %}
+                    {% for r in reportes %}
+                    <tr>
+                        <td>{{ r[1] }}</td>
+                        <td>RD$ {{ "%.2f"|format(r[2] or 0) }}</td>
+                        <td>RD$ {{ "%.2f"|format(r[3] or 0) }}</td>
+                        <td>RD$ {{ "%.2f"|format(r[4] or 0) }}</td>
+                        <td>
+                            <span class="estado estado-{{ r[5] }}">
+                                {{ r[5]|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ r[6] }}</td>
+                        <td>
+                            <a href="/reporte/{{ r[0] }}" class="btn-mini">👁 Ver</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7">No hay reportes guardados para mostrar.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<style>
+.reporte-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.reporte-header{
+    background:linear-gradient(135deg, #fff8f4, #f7efe8);
+    border-radius:18px;
+    padding:24px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.06);
+}
+
+.reporte-header h2{
+    margin:0 0 8px 0;
+    color:#6b4226;
+}
+
+.reporte-header p{
+    margin:0;
+    color:#6a5a4d;
+}
+
+.filtros-box,
+.tabla-box{
+    background:white;
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.06);
+}
+
+.filtros-form{
+    display:flex;
+    gap:16px;
+    align-items:end;
+    flex-wrap:wrap;
+}
+
+.campo{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-width:220px;
+}
+
+.acciones-filtro{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn-sec{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 14px;
+    border-radius:10px;
+    text-decoration:none;
+    background:#eee;
+    color:#333;
+}
+
+.resumen-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:16px;
+}
+
+.resumen-card{
+    background:white;
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.06);
+}
+
+.resumen-card span{
+    display:block;
+    color:#7a6d63;
+    margin-bottom:8px;
+}
+
+.resumen-card h3{
+    margin:0;
+    color:#6b4226;
+    font-size:28px;
+}
+
+.tabla-reportes{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.tabla-reportes th,
+.tabla-reportes td{
+    padding:14px 12px;
+    border-bottom:1px solid #eee;
+    text-align:left;
+}
+
+.tabla-reportes th{
+    background:#faf6f2;
+    color:#6b4226;
+}
+
+.estado{
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.estado-cuadrada{
+    background:#e7f7ec;
+    color:#1f7a3f;
+}
+
+.estado-sobrante{
+    background:#eef4ff;
+    color:#2f5fb3;
+}
+
+.estado-faltante{
+    background:#fdecec;
+    color:#b23b3b;
+}
+
+.btn-mini{
+    display:inline-block;
+    padding:8px 12px;
+    border-radius:10px;
+    text-decoration:none;
+    background:#6b4226;
+    color:white;
+}
+
+@media (max-width: 900px){
+    .tabla-box{
+        overflow-x:auto;
+    }
+}
+</style>
+{% endblock %}

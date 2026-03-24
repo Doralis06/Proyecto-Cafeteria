@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficas</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1>📊 Gráficas del Negocio</h1>
+
+<canvas id="ventasChart"></canvas>
+
+<script>
+fetch("/api/grafica_ventas")
+.then(res => res.json())
+.then(data => {
+
+    const ctx = document.getElementById("ventasChart").getContext("2d");
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: data.fechas,
+            datasets: [{
+                label: "Ventas por día (RD$)",
+                data: data.totales,
+                borderWidth: 2,
+                fill: true
+            }]
+        }
+    });
+
+});
+</script>
+
+<br>
+<a href="/dashboard">⬅ Volver</a>
+
+</body>
+</html>

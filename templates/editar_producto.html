@@ -51,6 +51,10 @@
             </div>
         </div>
 
+        <div>
+    <label for="costo">Costo</label>
+    <input type="number" step="0.01" id="costo" name="costo" value="{{ producto[7] if producto|length > 7 else 0 }}" required>
+</div>
         <div class="acciones">
             <button type="submit">✅ Actualizar producto</button>
             <a class="link-btn sec" href="/productos">⬅ Volver</a>

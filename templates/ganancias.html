@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Reportes - Cafetería La Curva{% endblock %}
+{% block title %}Ganancias - Cafetería La Curva{% endblock %}
 
 {% block content %}
 
 <style>
-    .reportes-wrap{
+    .ganancias-wrap{
         display:flex;
         flex-direction:column;
         gap:24px;
     }
 
-    .hero-reportes{
-        background:linear-gradient(135deg,#fff8f2,#f8efe8);
+    .hero-ganancias{
+        background:linear-gradient(135deg,#fff9ef,#f9f1e6);
         padding:28px;
         border-radius:24px;
         box-shadow:0 10px 30px rgba(0,0,0,0.08);
@@ -23,18 +23,18 @@
         gap:20px;
     }
 
-    .hero-reportes h1{
+    .hero-ganancias h1{
         margin:0 0 8px 0;
         color:#6b4226;
         font-size:32px;
     }
 
-    .hero-reportes p{
+    .hero-ganancias p{
         margin:0;
         color:#7b695d;
     }
 
-    .pill-reportes{
+    .badge-ganancia{
         background:white;
         color:#6b4226;
         padding:12px 18px;
@@ -43,285 +43,126 @@
         box-shadow:0 6px 18px rgba(0,0,0,0.07);
     }
 
-    .box-bonita{
+    .grid-bonita{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+        gap:18px;
+    }
+
+    .card-bonita{
         background:white;
         padding:24px;
         border-radius:22px;
         box-shadow:0 10px 30px rgba(0,0,0,0.08);
     }
 
-    .box-bonita h3{
-        margin-top:0;
-        color:#6b4226;
-    }
-
-    .filtro-form{
-        display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-        gap:16px;
-        align-items:end;
-    }
-
-    .campo{
-        display:flex;
-        flex-direction:column;
-        gap:8px;
-    }
-
-    .campo label{
-        font-weight:600;
-        color:#5f5147;
-    }
-
-    .campo input{
-        padding:12px 14px;
-        border:1px solid #e4d7cc;
-        border-radius:14px;
-        outline:none;
-        background:#fffdfa;
-    }
-
-    .campo input:focus{
-        border-color:#c99872;
-        box-shadow:0 0 0 3px rgba(201,152,114,0.15);
-    }
-
-    .acciones-form{
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-    }
-
-    .btn-principal, .btn-secundario, .btn-ver, .btn-eliminar{
-        border:none;
-        text-decoration:none;
-        cursor:pointer;
-        transition:.2s ease;
-        font-weight:600;
-    }
-
-    .btn-principal{
-        background:#6b4226;
-        color:white;
-        padding:12px 18px;
-        border-radius:14px;
-    }
-
-    .btn-principal:hover{
-        transform:translateY(-2px);
-        background:#7a4b2b;
-    }
-
-    .btn-secundario{
-        background:#eee7e1;
-        color:#5b4636;
-        padding:12px 18px;
-        border-radius:14px;
-    }
-
-    .btn-secundario:hover{
-        transform:translateY(-2px);
-        background:#e4d8cf;
-    }
-
-    .grid-resumen{
-        display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-        gap:18px;
-    }
-
-    .card-resumen{
-        background:white;
-        padding:22px;
-        border-radius:22px;
-        box-shadow:0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    .card-resumen span{
+    .card-bonita span{
         display:block;
-        color:#857568;
+        color:#87776a;
         margin-bottom:8px;
     }
 
-    .card-resumen h2{
+    .card-bonita h2{
         margin:0;
         color:#6b4226;
         font-size:28px;
     }
 
-    .tabla-card{
+    .logica-box{
         background:white;
-        padding:20px;
+        padding:24px;
         border-radius:22px;
         box-shadow:0 10px 30px rgba(0,0,0,0.08);
-        overflow-x:auto;
     }
 
-    .tabla-reportes{
-        width:100%;
-        border-collapse:collapse;
-        min-width:1100px;
-    }
-
-    .tabla-reportes th{
-        background:#faf5f0;
+    .logica-box h3{
+        margin-top:0;
         color:#6b4226;
-        padding:14px;
-        border-bottom:1px solid #eadfd6;
-        text-align:center;
     }
 
-    .tabla-reportes td{
-        padding:14px;
-        border-bottom:1px solid #f0e7e0;
-        text-align:center;
-        color:#4d4038;
+    .lista-logica{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:18px;
+        margin-top:18px;
     }
 
-    .tabla-reportes tr:hover{
-        background:#fffaf6;
+    .mini-card{
+        background:#fff8f2;
+        border:1px solid #f0e5dc;
+        border-radius:18px;
+        padding:18px;
     }
 
-    .acciones-tabla{
-        display:flex;
-        justify-content:center;
-        gap:8px;
-        flex-wrap:wrap;
+    .mini-card strong{
+        display:block;
+        color:#6b4226;
+        margin-bottom:8px;
+        font-size:18px;
     }
 
-    .btn-ver{
-        background:#d8a06a;
-        color:white;
-        padding:10px 14px;
-        border-radius:12px;
-    }
-
-    .btn-ver:hover{
-        transform:translateY(-2px);
-        background:#c7905f;
-    }
-
-    .btn-eliminar{
-        background:#c94f4f;
-        color:white;
-        padding:10px 14px;
-        border-radius:12px;
-    }
-
-    .btn-eliminar:hover{
-        transform:translateY(-2px);
-        background:#b84040;
-    }
-
-    .sin-datos{
-        text-align:center;
-        padding:24px;
-        color:#7a6d63;
-        font-weight:600;
+    .mini-card p{
+        margin:0;
+        color:#5f5147;
+        font-weight:bold;
     }
 </style>
 
-<div class="reportes-wrap">
+<div class="ganancias-wrap">
 
-    <div class="hero-reportes">
+    <div class="hero-ganancias">
         <div>
-            <h1>📑 Reportes de Caja</h1>
-            <p>Aquí puedes consultar, filtrar y eliminar reportes guardados por fecha.</p>
+            <h1>💰 Ganancias del negocio</h1>
+            <p>Aquí ves ventas, costo estimado, ganancia y cuánto puedes separar para reinvertir.</p>
         </div>
 
-        <div class="pill-reportes">
-            Reportes: {{ reportes|length }}
+        <div class="badge-ganancia">
+            Ganancia total: RD$ {{ "%.2f"|format(ganancia_total or 0) }}
         </div>
     </div>
 
-    <div class="box-bonita">
-        <h3>🔎 Buscar reporte por fecha</h3>
+    <div class="grid-bonita">
+        <div class="card-bonita">
+            <span>Total vendido</span>
+            <h2>RD$ {{ "%.2f"|format(total_vendido or 0) }}</h2>
+        </div>
 
-        <form method="POST" class="filtro-form">
-            <div class="campo">
-                <label for="fecha_buscar">Fecha</label>
-                <input
-                    type="date"
-                    id="fecha_buscar"
-                    name="fecha_buscar"
-                    value="{{ fecha_buscar if fecha_buscar else '' }}"
-                >
+        <div class="card-bonita">
+            <span>Ingreso por detalles</span>
+            <h2>RD$ {{ "%.2f"|format(ingreso_total_detalle or 0) }}</h2>
+        </div>
+
+        <div class="card-bonita">
+            <span>Costo de lo vendido</span>
+            <h2>RD$ {{ "%.2f"|format(costo_total_vendido or 0) }}</h2>
+        </div>
+
+        <div class="card-bonita">
+            <span>Valor del inventario actual</span>
+            <h2>RD$ {{ "%.2f"|format(valor_inventario or 0) }}</h2>
+        </div>
+    </div>
+
+    <div class="logica-box">
+        <h3>🧠 Distribución sugerida de la ganancia</h3>
+        <p>Usamos una lógica simple: 60% reinversión, 20% ahorro/reserva y 20% imprevistos.</p>
+
+        <div class="lista-logica">
+            <div class="mini-card">
+                <strong>📦 Reinvertir</strong>
+                <p>RD$ {{ "%.2f"|format(capital_reinversion or 0) }}</p>
             </div>
 
-            <div class="acciones-form">
-                <button type="submit" class="btn-principal">Buscar</button>
-                <a href="/reportes" class="btn-secundario">Limpiar</a>
+            <div class="mini-card">
+                <strong>🏦 Ahorro / Reserva</strong>
+                <p>RD$ {{ "%.2f"|format(ahorro_reserva or 0) }}</p>
             </div>
-        </form>
-    </div>
 
-    <div class="grid-resumen">
-        <div class="card-resumen">
-            <span>Total sistema reportado</span>
-            <h2>RD$ {{ "%.2f"|format(total_reportado or 0) }}</h2>
+            <div class="mini-card">
+                <strong>🛠 Imprevistos</strong>
+                <p>RD$ {{ "%.2f"|format(fondo_imprevistos or 0) }}</p>
+            </div>
         </div>
-
-        <div class="card-resumen">
-            <span>Total real contado</span>
-            <h2>RD$ {{ "%.2f"|format(total_real or 0) }}</h2>
-        </div>
-
-        <div class="card-resumen">
-            <span>Cantidad de reportes</span>
-            <h2>{{ reportes|length }}</h2>
-        </div>
-    </div>
-
-    <div class="tabla-card">
-        <table class="tabla-reportes">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Fecha cierre</th>
-                    <th>Total sistema</th>
-                    <th>Total real</th>
-                    <th>Diferencia</th>
-                    <th>Estado</th>
-                    <th>Usuario</th>
-                    <th>Registrado</th>
-                    <th>Observaciones</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if reportes %}
-                    {% for r in reportes %}
-                    <tr>
-                        <td>{{ r[0] }}</td>
-                        <td>{{ r[1] }}</td>
-                        <td>RD$ {{ "%.2f"|format(r[2] or 0) }}</td>
-                        <td>RD$ {{ "%.2f"|format(r[3] or 0) }}</td>
-                        <td>RD$ {{ "%.2f"|format(r[4] or 0) }}</td>
-                        <td>{{ r[5] }}</td>
-                        <td>{{ r[6] }}</td>
-                        <td>{{ r[7] }}</td>
-                        <td>{{ r[8] if r[8] else "Sin notas" }}</td>
-                        <td>
-                            <div class="acciones-tabla">
-                                <a href="/reporte/{{ r[0] }}" class="btn-ver">👁 Ver</a>
-                                <a
-                                    href="/eliminar_reporte/{{ r[0] }}"
-                                    class="btn-eliminar"
-                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte?')"
-                                >
-                                    🗑 Eliminar
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="10" class="sin-datos">No hay reportes guardados en esa fecha.</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
     </div>
 
 </div>

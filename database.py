@@ -135,6 +135,7 @@ def crear_bd():
             tipo VARCHAR(100) DEFAULT 'General',
             precio_pequeno NUMERIC DEFAULT 0,
             precio_grande NUMERIC DEFAULT 0
+                  costo REAL DEFAULT 0
         )
         """)
 

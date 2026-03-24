@@ -706,11 +706,16 @@ def ganancias():
         conn = conectar_seguro()
         c = conn.cursor()
 
+        # Total vendido desde facturas
         c.execute("SELECT COALESCE(SUM(total), 0) FROM facturas")
         total_vendido = float(c.fetchone()[0] or 0)
 
+        # Traer productos con costo
         c.execute("""
-            SELECT nombre, precio, stock, tipo, precio_pequeno, precio_grande, COALESCE(costo, 0)
+            SELECT nombre, precio, stock, tipo,
+                   COALESCE(precio_pequeno, 0),
+                   COALESCE(precio_grande, 0),
+                   COALESCE(costo, 0)
             FROM productos
         """)
         productos = c.fetchall()
@@ -737,6 +742,7 @@ def ganancias():
 
             valor_inventario += stock * costo
 
+        # Leer detalles de facturas para calcular costo vendido real
         c.execute("""
             SELECT producto, cantidad, precio, subtotal
             FROM detalle_factura
@@ -787,10 +793,12 @@ def ganancias():
             fondo_imprevistos=fondo_imprevistos
         )
 
+    except Exception as e:
+        return f"Error en ganancias: {e}"
+
     finally:
         if conn:
             conn.close()
-
 
 # ---------------- CAJA ----------------
 @app.route("/caja", methods=["GET", "POST"])

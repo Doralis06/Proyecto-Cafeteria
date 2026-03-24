@@ -1,5 +1,4 @@
 import os
-import re
 import sqlite3
 
 try:
@@ -35,20 +34,15 @@ class CursorCompat:
         params = params or ()
         q_pg = self._adapt_query(query)
 
-        try:
-            self._cursor.execute(q_pg, params)
+        self._cursor.execute(q_pg, params)
 
-            # Intentar capturar id si el INSERT tiene RETURNING id
-            if q_pg.strip().upper().startswith("INSERT INTO"):
-                try:
-                    row = self._cursor.fetchone()
-                    if row:
-                        self.lastrowid = row[0]
-                except Exception:
-                    self.lastrowid = None
-
-        except Exception:
-            raise
+        if q_pg.strip().upper().startswith("INSERT INTO"):
+            try:
+                row = self._cursor.fetchone()
+                if row:
+                    self.lastrowid = row[0]
+            except Exception:
+                self.lastrowid = None
 
         return self
 
@@ -99,7 +93,6 @@ def conectar():
         conn.autocommit = False
         return ConnectionCompat(conn)
 
-    # Local con SQLite
     conn = sqlite3.connect("cafeteria.db", timeout=30)
     return conn
 
@@ -134,8 +127,8 @@ def crear_bd():
             stock INTEGER DEFAULT 0,
             tipo VARCHAR(100) DEFAULT 'General',
             precio_pequeno NUMERIC DEFAULT 0,
-            precio_grande NUMERIC DEFAULT 0
-                  costo REAL DEFAULT 0
+            precio_grande NUMERIC DEFAULT 0,
+            costo NUMERIC DEFAULT 0
         )
         """)
 
@@ -239,7 +232,8 @@ def crear_bd():
             stock INTEGER DEFAULT 0,
             tipo TEXT DEFAULT 'General',
             precio_pequeno REAL DEFAULT 0,
-            precio_grande REAL DEFAULT 0
+            precio_grande REAL DEFAULT 0,
+            costo REAL DEFAULT 0
         )
         """)
 
@@ -255,6 +249,11 @@ def crear_bd():
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN precio_grande REAL DEFAULT 0")
+        except:
+            pass
+
+        try:
+            c.execute("ALTER TABLE productos ADD COLUMN costo REAL DEFAULT 0")
         except:
             pass
 

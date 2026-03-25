@@ -1,74 +1,285 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estadísticas</title>
-<link rel="stylesheet" href="/static/css/style.css">
-    <style>
-        body {
-            font-family: Arial;
-            background: #f4f4f4;
-            padding: 20px;
-        }
+{% extends "base.html" %}
 
-        h1 {
-            color: #6b4226;
-        }
+{% block title %}Estadísticas - Cafetería La Curva{% endblock %}
 
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 10px 0;
-            border-radius: 10px;
-            box-shadow: 0px 5px 10px rgba(0,0,0,0.1);
-        }
+{% block content %}
 
-        ul {
-            padding-left: 20px;
-        }
-    </style>
-</head>
-<body>
+<style>
+    .estadisticas-wrap{
+        display:flex;
+        flex-direction:column;
+        gap:24px;
+    }
 
-<h1>📊 Estadísticas del Negocio</h1>
+    .hero-estadisticas{
+        background:linear-gradient(135deg,#fff8f2,#f8efe8);
+        padding:28px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        flex-wrap:wrap;
+    }
 
-<div class="card">
-    <h3>💰 Total Vendido</h3>
-    <p>RD$ {{ total }}</p>
+    .hero-estadisticas h1{
+        margin:0 0 8px 0;
+        color:#6b4226;
+        font-size:32px;
+    }
+
+    .hero-estadisticas p{
+        margin:0;
+        color:#7a685b;
+        font-size:15px;
+        max-width:700px;
+    }
+
+    .hero-badge{
+        background:white;
+        color:#6b4226;
+        padding:12px 18px;
+        border-radius:999px;
+        font-weight:bold;
+        box-shadow:0 6px 18px rgba(0,0,0,0.07);
+    }
+
+    .grid-resumen{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:18px;
+    }
+
+    .card-resumen{
+        background:white;
+        padding:22px;
+        border-radius:22px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .card-resumen span{
+        display:block;
+        color:#857568;
+        margin-bottom:8px;
+    }
+
+    .card-resumen h2{
+        margin:0;
+        color:#6b4226;
+        font-size:28px;
+    }
+
+    .chart-card{
+        background:white;
+        padding:24px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .chart-card h3{
+        margin:0 0 14px 0;
+        color:#6b4226;
+    }
+
+    .chart-card p{
+        margin:0 0 18px 0;
+        color:#74675d;
+    }
+
+    .tabla-box{
+        background:white;
+        padding:24px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        overflow-x:auto;
+    }
+
+    .tabla-box h3{
+        margin:0 0 14px 0;
+        color:#6b4226;
+    }
+
+    .tabla-resumen{
+        width:100%;
+        border-collapse:collapse;
+    }
+
+    .tabla-resumen th{
+        background:#faf5f0;
+        color:#6b4226;
+        padding:14px;
+        text-align:center;
+        border-bottom:1px solid #eadfd6;
+    }
+
+    .tabla-resumen td{
+        padding:14px;
+        text-align:center;
+        border-bottom:1px solid #f0e7e0;
+        color:#4d4038;
+    }
+
+    .sin-datos{
+        text-align:center;
+        color:#7a6d63;
+        padding:16px;
+    }
+
+    .volver-box{
+        display:flex;
+        justify-content:flex-start;
+    }
+
+    .volver-link{
+        text-decoration:none;
+        background:#eee7e1;
+        color:#5b4636;
+        padding:12px 18px;
+        border-radius:14px;
+        font-weight:600;
+        transition:0.2s ease;
+    }
+
+    .volver-link:hover{
+        transform:translateY(-2px);
+        background:#e4d8cf;
+    }
+</style>
+
+<div class="estadisticas-wrap">
+
+    <div class="hero-estadisticas">
+        <div>
+            <h1>📊 Estadísticas</h1>
+            <p>
+                Aquí puedes ver un resumen general de las ventas registradas,
+                incluyendo el total vendido, la cantidad de ventas y la evolución por fecha.
+            </p>
+        </div>
+
+        <div class="hero-badge">
+            Vista estadística
+        </div>
+    </div>
+
+    <div class="grid-resumen">
+        <div class="card-resumen">
+            <span>Total vendido</span>
+            <h2>RD$ {{ "%.2f"|format(total or 0) }}</h2>
+        </div>
+
+        <div class="card-resumen">
+            <span>Cantidad de ventas</span>
+            <h2>{{ cantidad or 0 }}</h2>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <h3>📈 Ventas por fecha</h3>
+        <p>La gráfica toma automáticamente los datos de las facturas registradas.</p>
+        <canvas id="graficaEstadisticas"></canvas>
+    </div>
+
+    <div class="tabla-box">
+        <h3>🧾 Resumen por fecha</h3>
+        <table class="tabla-resumen">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Total vendido</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if fechas and totales %}
+                    {% for i in range(fechas|length) %}
+                    <tr>
+                        <td>{{ fechas[i] }}</td>
+                        <td>RD$ {{ "%.2f"|format(totales[i] or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="2" class="sin-datos">No hay datos estadísticos todavía.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="volver-box">
+        <a href="/dashboard" class="volver-link">⬅ Volver al dashboard</a>
+    </div>
+
 </div>
 
-<div class="card">
-    <h3>🧾 Cantidad de Ventas</h3>
-    <p>{{ cantidad }}</p>
-</div>
+<script id="estadisticas-data" type="application/json">
+{
+    "fechas": {{ fechas|default([], true)|tojson }},
+    "totales": {{ totales|default([], true)|tojson }}
+}
+</script>
 
-<div class="card">
-    <h3>🏆 Producto Más Vendido</h3>
-    {% if producto_top %}
-        <p>{{ producto_top[0] }} ({{ producto_top[1] }} vendidos)</p>
-    {% else %}
-        <p>No hay datos</p>
-    {% endif %}
-</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dataTag = document.getElementById("estadisticas-data");
+    const chartCanvas = document.getElementById("graficaEstadisticas");
 
-<div class="card">
-    <h3>📅 Ventas por Día</h3>
+    if (!dataTag || !chartCanvas) {
+        return;
+    }
 
-    {% if ventas_dia %}
-        <ul>
-            {% for v in ventas_dia %}
-                <li>{{ v[0] }} → RD$ {{ v[1] }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No hay ventas registradas</p>
-    {% endif %}
+    let parsedData = { fechas: [], totales: [] };
 
-</div>
+    try {
+        parsedData = JSON.parse(dataTag.textContent);
+    } catch (error) {
+        console.error("Error leyendo datos de estadísticas:", error);
+    }
 
-<br>
-<a href="/">⬅ Volver al dashboard</a>
+    const etiquetas = Array.isArray(parsedData.fechas) ? parsedData.fechas : [];
+    const valoresGrafica = Array.isArray(parsedData.totales) ? parsedData.totales : [];
 
-</body>
-</html>
+    const ctx = chartCanvas.getContext("2d");
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: etiquetas,
+            datasets: [{
+                label: "Ventas por fecha",
+                data: valoresGrafica,
+                tension: 0.3,
+                fill: false,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#6b4226"
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: "#6b4226"
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: "#6b4226"
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

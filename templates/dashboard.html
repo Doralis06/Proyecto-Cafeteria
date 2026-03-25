@@ -1,141 +1,277 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Cafetería</title>
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="/static/css/style.css">
+{% block title %}Dashboard - Cafetería La Curva{% endblock %}
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
+{% block content %}
+
+<style>
+    .dashboard-wrap{
+        display:flex;
+        flex-direction:column;
+        gap:24px;
+    }
+
+    .hero{
+        background: linear-gradient(135deg, #6b4226, #8b5e3c, #c99872);
+        color:white;
+        border-radius:28px;
+        padding:32px;
+        box-shadow:0 18px 40px rgba(0,0,0,0.15);
+        position:relative;
+        overflow:hidden;
+    }
+
+    .hero::before{
+        content:"";
+        position:absolute;
+        right:-40px;
+        top:-40px;
+        width:180px;
+        height:180px;
+        background:rgba(255,255,255,0.10);
+        border-radius:50%;
+    }
+
+    .hero::after{
+        content:"";
+        position:absolute;
+        right:60px;
+        bottom:-60px;
+        width:140px;
+        height:140px;
+        background:rgba(255,255,255,0.08);
+        border-radius:50%;
+    }
+
+    .hero-contenido{
+        position:relative;
+        z-index:2;
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:20px;
+        flex-wrap:wrap;
+    }
+
+    .hero-texto h1{
+        margin:0 0 10px 0;
+        font-size:34px;
+        line-height:1.1;
+    }
+
+    .hero-texto p{
+        margin:0;
+        max-width:700px;
+        font-size:15px;
+        color:rgba(255,255,255,0.92);
+    }
+
+    .hero-badge{
+        background:rgba(255,255,255,0.16);
+        border:1px solid rgba(255,255,255,0.20);
+        padding:12px 16px;
+        border-radius:16px;
+        font-weight:700;
+      
+    }
+
+    .panel-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:20px;
+    }
+
+    .panel-card{
+        background:white;
+        border-radius:24px;
+        padding:24px;
+        box-shadow:0 12px 28px rgba(0,0,0,0.08);
+        transition:0.25s ease;
+        border:1px solid #f1e6dc;
+    }
+
+    .panel-card:hover{
+        transform:translateY(-4px);
+        box-shadow:0 18px 36px rgba(0,0,0,0.10);
+        background:#fffaf6;
+    }
+
+    .panel-icono{
+        width:58px;
+        height:58px;
+        border-radius:18px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:28px;
+        margin-bottom:14px;
+        background:#f8efe8;
+    }
+
+    .panel-card h3{
+        margin:0 0 8px 0;
+        color:#6b4226;
+        font-size:20px;
+    }
+
+    .panel-card p{
+        margin:0;
+        color:#6f6258;
+        font-size:14px;
+        line-height:1.5;
+    }
+
+    .mini-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+        gap:20px;
+    }
+
+    .mini-card{
+        background:white;
+        border-radius:24px;
+        padding:22px;
+        box-shadow:0 12px 28px rgba(0,0,0,0.08);
+        border:1px solid #f1e6dc;
+    }
+
+    .mini-card h4{
+        margin:0 0 10px 0;
+        color:#6b4226;
+        font-size:18px;
+    }
+
+    .mini-card p{
+        margin:0;
+        color:#6f6258;
+        font-size:14px;
+        line-height:1.6;
+    }
+
+    .dashboard-footer{
+        background:white;
+        border-radius:24px;
+        padding:22px;
+        box-shadow:0 12px 28px rgba(0,0,0,0.08);
+        border:1px solid #f1e6dc;
+    }
+
+    .dashboard-footer strong{
+        color:#6b4226;
+    }
+
+    @media (max-width: 768px){
+        .hero{
+            padding:24px;
         }
 
-        header {
-            background: linear-gradient(135deg, #6b4226, #8b5e3c);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 24px;
-            letter-spacing: 1px;
+        .hero-texto h1{
+            font-size:28px;
         }
+    }
+</style>
 
-        .container {
-            padding: 20px;
-        }
+<div class="dashboard-wrap">
 
-        h2 {
-            margin-bottom: 20px;
-            color: #444;
-        }
-
-        .menu {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0px 5px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .card:hover {
-            transform: scale(1.05);
-            background: #fdf7f3;
-        }
-
-        a {
-            text-decoration: none;
-            color: black;
-        }
-    </style>
-</head>
-
-<body>
-
-<header>
-  Panel de Control  - Cafetería
-</header>
-
-<div class="container">
-    <h2>Bienvenido al sistema</h2>
-
-    <div class="menu">
-
-        <!-- 📈 GRÁFICAS -->
-        <a href="/graficas">
-            <div class="card">
-                📈 Gráficas
+    <section class="hero">
+        <div class="hero-contenido">
+            <div class="hero-texto">
+                <h1>☕ Bienvenida a Cafetería La Curva</h1>
+                <p>
+                    Este panel es el centro visual del sistema. Desde aquí puedes controlar tus ventas,
+                    inventario, caja, reportes, estadísticas y ganancias de forma organizada,
+                    rápida y bonita.
+                </p>
             </div>
-        </a>
 
-        <!-- 📦 INVENTARIO -->
-        <a href="/productos">
-            <div class="card">
-                📦 Inventario
+            <div class="hero-badge">
+                👤 Usuario activo: {{ session["usuario"] }}
             </div>
-        </a>
+        </div>
+    </section>
 
-        <!-- 💸 FACTURACIÓN -->
-        <a href="/facturacion">
-            <div class="card">
-                💸 Facturación
-            </div>
-        </a>
+    <section class="panel-grid">
+        <div class="panel-card">
+            <div class="panel-icono">📦</div>
+            <h3>Inventario</h3>
+            <p>
+                Registra productos, edita información y controla el stock disponible
+                con una mejor organización.
+            </p>
+        </div>
 
-        <!-- 📊 VENTAS -->
-        <a href="/ventas">
-            <div class="card">
-                📊 Ventas
-            </div>
-        </a>
+        <div class="panel-card">
+            <div class="panel-icono">💸</div>
+            <h3>Facturación</h3>
+            <p>
+                Realiza ventas rápidas, calcula devuelta y genera facturas
+                de forma clara y profesional.
+            </p>
+        </div>
 
-        <!-- 📑 REPORTES -->
-        <a href="/reportes">
-            <div class="card">
-                📑 Reportes
-            </div>
-        </a>
-        <a href="/ganancias">
-            <div class="card card-center">
-                💰 Ganancias</div></a>
+        <div class="panel-card">
+            <div class="panel-icono">📊</div>
+            <h3>Ventas</h3>
+            <p>
+                Consulta ventas por fecha, revisa facturas y lleva mejor control
+                de todo lo que se ha vendido.
+            </p>
+        </div>
 
-        <!-- 🧠 ESTADÍSTICAS (UNA SOLA, CORREGIDO) -->
-        <a href="/estadisticas">
-            <div class="card">
-                🧠 Estadísticas Pro
-            </div>
-        </a>
+        <div class="panel-card">
+            <div class="panel-icono">📑</div>
+            <h3>Reportes</h3>
+            <p>
+                Visualiza cierres guardados, filtra por fecha y revisa
+                el comportamiento del negocio.
+            </p>
+        </div>
 
-        <a href="/reportes">
-            <div class="card card-center">
-                📑 Reportes</div></a>
+        <div class="panel-card">
+            <div class="panel-icono">💼</div>
+            <h3>Caja</h3>
+            <p>
+                Haz cuadre de caja, registra denominaciones y detecta
+                sobrantes o faltantes con facilidad.
+            </p>
+        </div>
 
-        <!-- 🚪 LOGOUT -->
-        <a href="/logout">
-            <div class="card">
-                🚪 Cerrar sesión
-            </div>
-        </a>
+        <div class="panel-card">
+            <div class="panel-icono">💰</div>
+            <h3>Ganancias</h3>
+            <p>
+                Observa cuánto has vendido, cuánto invertiste y cuál es
+                la ganancia real para reinvertir mejor.
+            </p>
+        </div>
+    </section>
 
-        <a href="/caja">
-    <div class="card">
-        💼 Caja
-    </div>
-</a>
-    </div>
+    <section class="mini-grid">
+        <div class="mini-card">
+            <h4>🧠 Organización del sistema</h4>
+            <p>
+                El sistema está diseñado para ayudarte a trabajar más ordenada,
+                evitando pérdida de datos y facilitando el control del negocio
+                desde un solo lugar.
+            </p>
+        </div>
+
+        <div class="mini-card">
+            <h4>🚀 Enfoque práctico</h4>
+            <p>
+                La idea es que todo sea sencillo de usar en el día a día,
+                pero con apariencia profesional y utilidad real para la cafetería.
+            </p>
+        </div>
+    </section>
+
+    <section class="dashboard-footer">
+        <p>
+            <strong>Consejo:</strong> usa las opciones del menú principal para entrar a cada módulo.
+            Este dashboard funciona como una portada moderna del sistema, sin repetir pestañas ni navegación.
+        </p>
+    </section>
+
 </div>
 
-</body>
-</html>
+{% endblock %}

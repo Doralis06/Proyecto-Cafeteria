@@ -1,28 +1,280 @@
 {% extends "base.html" %}
+
+{% block title %}Ganancias - Cafetería La Curva{% endblock %}
+
 {% block content %}
 
-<h2>📊 Ganancias del negocio</h2>
+<style>
+    .ganancias-wrap{
+        display:flex;
+    flex-direction:column;
+        gap:24px;
+    }
 
-<h3>💵 Total vendido: RD$ {{total_vendido}}</h3>
-<h3>📥 Ingreso real: RD$ {{ingreso_total_detalle}}</h3>
-<h3>📦 Costo total vendido: RD$ {{costo_total_vendido}}</h3>
+    .hero-ganancias{
+        background:linear-gradient(135deg,#fff8f2,#f8efe8);
+        padding:28px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        flex-wrap:wrap;
+    }
 
-<hr>
+    .hero-ganancias h1{
+        margin:0 0 8px 0;
+        color:#6b4226;
+        font-size:32px;
+    }
 
-<h2>🔥 Ganancia total: RD$ {{ganancia_total}}</h2>
+    .hero-ganancias p{
+        margin:0;
+        color:#7a685b;
+        font-size:15px;
+        max-width:760px;
+    }
 
-<hr>
+    .hero-badge{
+        background:white;
+        color:#6b4226;
+        padding:12px 18px;
+        border-radius:999px;
+        font-weight:bold;
+        box-shadow:0 6px 18px rgba(0,0,0,0.07);
+    }
 
-<h3>📦 Valor inventario: RD$ {{valor_inventario}}</h3>
+    .grid-principal{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:18px;
+    }
 
-<hr>
+    .card-metrica{
+        background:white;
+        padding:24px;
+        border-radius:22px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        border:1px solid #f1e6dc;
+    }
 
-<h2>📈 Distribución inteligente</h2>
+    .card-metrica span{
+        display:block;
+        color:#86766a;
+        margin-bottom:8px;
+        font-size:14px;
+    }
 
-<ul>
-<li>🔁 Reinversión (60%): RD$ {{capital_reinversion}}</li>
-<li>💰 Ahorro (20%): RD$ {{ahorro_reserva}}</li>
-<li>⚠️ Fondo emergencia (20%): RD$ {{fondo_imprevistos}}</li>
-</ul>
+    .card-metrica h2{
+        margin:0;
+        color:#6b4226;
+        font-size:28px;
+    }
+
+    .ganancia-destacada{
+        background:linear-gradient(135deg,#6b4226,#8b5e3c);
+        color:white;
+        padding:26px;
+        border-radius:24px;
+        box-shadow:0 14px 34px rgba(0,0,0,0.12);
+    }
+
+    .ganancia-destacada span{
+        display:block;
+        margin-bottom:8px;
+        color:rgba(255,255,255,0.85);
+    }
+
+    .ganancia-destacada h2{
+        margin:0;
+        font-size:34px;
+    }
+
+    .bloque-info{
+        background:white;
+        padding:24px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        border:1px solid #f1e6dc;
+    }
+
+    .bloque-info h3{
+        margin:0 0 12px 0;
+        color:#6b4226;
+    }
+
+    .bloque-info p{
+        margin:0;
+        color:#6f6258;
+        line-height:1.7;
+    }
+
+    .grid-distribucion{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:18px;
+    }
+
+    .card-distribucion{
+        background:white;
+        padding:22px;
+        border-radius:22px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        border:1px solid #f1e6dc;
+    }
+
+    .card-distribucion h4{
+        margin:0 0 10px 0;
+        color:#6b4226;
+        font-size:18px;
+    }
+
+    .card-distribucion .monto{
+        font-size:28px;
+        font-weight:bold;
+        color:#333;
+        margin-bottom:8px;
+    }
+
+    .card-distribucion p{
+        margin:0;
+        color:#75685e;
+        font-size:14px;
+        line-height:1.6;
+    }
+
+    .tabla-box{
+        background:white;
+        padding:24px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        border:1px solid #f1e6dc;
+    }
+
+    .tabla-box h3{
+        margin:0 0 14px 0;
+        color:#6b4226;
+    }
+
+    .tabla-box ul{
+        margin:0;
+        padding-left:20px;
+        color:#6f6258;
+        line-height:1.8;
+    }
+
+    .volver-box{
+        display:flex;
+        justify-content:flex-start;
+    }
+
+    .volver-link{
+        text-decoration:none;
+        background:#eee7e1;
+        color:#5b4636;
+        padding:12px 18px;
+        border-radius:14px;
+        font-weight:600;
+        transition:0.2s ease;
+    }
+
+    .volver-link:hover{
+        transform:translateY(-2px);
+        background:#e4d8cf;
+    }
+</style>
+
+<div class="ganancias-wrap">
+
+    <div class="hero-ganancias">
+        <div>
+            <h1>💰 Ganancias</h1>
+            <p>
+                Aquí puedes ver de manera clara cuánto has vendido, cuánto te costó la mercancía vendida,
+                cuánto ganaste realmente y cómo puedes distribuir esa ganancia de forma inteligente.
+            </p>
+        </div>
+
+        <div class="hero-badge">
+            Resumen financiero del negocio
+        </div>
+    </div>
+
+    <div class="grid-principal">
+        <div class="card-metrica">
+            <span>Total vendido</span>
+            <h2>RD$ {{ "%.2f"|format(total_vendido or 0) }}</h2>
+        </div>
+
+        <div class="card-metrica">
+            <span>Ingreso real por ventas</span>
+            <h2>RD$ {{ "%.2f"|format(ingreso_total_detalle or 0) }}</h2>
+        </div>
+
+        <div class="card-metrica">
+            <span>Costo de lo vendido</span>
+            <h2>RD$ {{ "%.2f"|format(costo_total_vendido or 0) }}</h2>
+        </div>
+
+        <div class="card-metrica">
+            <span>Valor actual del inventario</span>
+            <h2>RD$ {{ "%.2f"|format(valor_inventario or 0) }}</h2>
+        </div>
+    </div>
+
+    <div class="ganancia-destacada">
+        <span>Ganancia neta estimada</span>
+        <h2>RD$ {{ "%.2f"|format(ganancia_total or 0) }}</h2>
+    </div>
+
+    <div class="bloque-info">
+        <h3>🧠 ¿Qué significa esta ganancia?</h3>
+        <p>
+            La ganancia neta se calcula restando el costo estimado de la mercancía vendida al ingreso total recibido por las ventas.
+            En palabras simples: es el dinero que te queda después de recuperar lo invertido en esos productos vendidos.
+        </p>
+    </div>
+
+    <div class="grid-distribucion">
+        <div class="card-distribucion">
+            <h4>📦 Reinvertir</h4>
+            <div class="monto">RD$ {{ "%.2f"|format(capital_reinversion or 0) }}</div>
+            <p>
+                Este monto es ideal para volver a comprar mercancía y mantener el negocio abastecido.
+            </p>
+        </div>
+
+        <div class="card-distribucion">
+            <h4>🏦 Ahorro / Reserva</h4>
+            <div class="monto">RD$ {{ "%.2f"|format(ahorro_reserva or 0) }}</div>
+            <p>
+                Este dinero te ayuda a guardar una parte de la ganancia y tener más estabilidad.
+            </p>
+        </div>
+
+        <div class="card-distribucion">
+            <h4>🛠 Emergencias / Gastos</h4>
+            <div class="monto">RD$ {{ "%.2f"|format(fondo_imprevistos or 0) }}</div>
+            <p>
+                Puedes usar esta parte para resolver cualquier imprevisto o gasto inesperado del negocio.
+            </p>
+        </div>
+    </div>
+
+    <div class="tabla-box">
+        <h3>📌 Cómo estamos organizando la ganancia</h3>
+        <ul>
+            <li>60% para reinvertir en mercancía</li>
+            <li>20% para ahorro o reserva del negocio</li>
+            <li>20% para gastos e imprevistos</li>
+        </ul>
+    </div>
+
+    <div class="volver-box">
+        <a href="/dashboard" class="volver-link">⬅ Volver al dashboard</a>
+    </div>
+
+</div>
 
 {% endblock %}

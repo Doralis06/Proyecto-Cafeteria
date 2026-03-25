@@ -1,44 +1,198 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gráficas</title>
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
+{% block title %}Gráficas - Cafetería La Curva{% endblock %}
 
-<h1>📊 Gráficas del Negocio</h1>
+{% block content %}
 
-<canvas id="ventasChart"></canvas>
+<style>
+    .graficas-wrap{
+        display:flex;
+        flex-direction:column;
+        gap:24px;
+    }
 
+    .hero-graficas{
+        background:linear-gradient(135deg,#fff8f2,#f8efe8);
+        padding:28px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        flex-wrap:wrap;
+    }
+
+    .hero-graficas h1{
+        margin:0 0 8px 0;
+        color:#6b4226;
+        font-size:32px;
+    }
+
+    .hero-graficas p{
+        margin:0;
+        color:#7a685b;
+        font-size:15px;
+        max-width:700px;
+    }
+
+    .hero-badge{
+        background:white;
+        color:#6b4226;
+        padding:12px 18px;
+        border-radius:999px;
+        font-weight:bold;
+        box-shadow:0 6px 18px rgba(0,0,0,0.07);
+    }
+
+    .grid-resumen{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:18px;
+    }
+
+    .card-resumen{
+        background:white;
+        padding:22px;
+        border-radius:22px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .card-resumen span{
+        display:block;
+        color:#857568;
+        margin-bottom:8px;
+    }
+
+    .card-resumen h2{
+        margin:0;
+        color:#6b4226;
+        font-size:28px;
+    }
+
+    .chart-card{
+        background:white;
+        padding:24px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .chart-card h3{
+        margin:0 0 14px 0;
+        color:#6b4226;
+    }
+
+    .chart-card p{
+        margin:0 0 18px 0;
+        color:#74675d;
+    }
+
+    .volver-box{
+        display:flex;
+        justify-content:flex-start;
+    }
+
+    .volver-link{
+        text-decoration:none;
+        background:#eee7e1;
+        color:#5b4636;
+        padding:12px 18px;
+        border-radius:14px;
+        font-weight:600;
+        transition:0.2s ease;
+    }
+
+    .volver-link:hover{
+        transform:translateY(-2px);
+        background:#e4d8cf;
+    }
+</style>
+
+<div class="graficas-wrap">
+
+    <div class="hero-graficas">
+        <div>
+            <h1>📈 Gráficas de Ventas</h1>
+            <p>
+                Aquí puedes visualizar el comportamiento de las ventas por fecha
+                para entender mejor cómo se está moviendo el negocio.
+            </p>
+        </div>
+
+        <div class="hero-badge">
+            Vista gráfica del negocio
+        </div>
+    </div>
+
+    <div class="grid-resumen">
+        <div class="card-resumen">
+            <span>Visualización</span>
+            <h2>Diaria</h2>
+        </div>
+
+        <div class="card-resumen">
+            <span>Módulo</span>
+            <h2>Ventas</h2>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <h3>📊 Gráfica de ventas por fecha</h3>
+        <p>La gráfica se llena automáticamente con los datos registrados en las facturas.</p>
+        <canvas id="graficaVentas"></canvas>
+    </div>
+
+    <div class="volver-box">
+        <a href="/dashboard" class="volver-link">⬅ Volver al dashboard</a>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 fetch("/api/grafica_ventas")
-.then(res => res.json())
-.then(data => {
+    .then(response => response.json())
+    .then(data => {
+        const ctx = document.getElementById("graficaVentas").getContext("2d");
 
-    const ctx = document.getElementById("ventasChart").getContext("2d");
-
-    new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: data.fechas,
-            datasets: [{
-                label: "Ventas por día (RD$)",
-                data: data.totales,
-                borderWidth: 2,
-                fill: true
-            }]
-        }
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: data.fechas,
+                datasets: [{
+                    label: "Ventas por día",
+                    data: data.totales,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: "#6b4226"
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: "#6b4226"
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: "#6b4226"
+                        }
+                    }
+                }
+            }
+        });
+    })
+    .catch(error => {
+        console.error("Error cargando gráfica:", error);
     });
-
-});
 </script>
 
-<br>
-<a href="/dashboard">⬅ Volver</a>
-
-</body>
-</html>
+{% endblock %}

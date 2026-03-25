@@ -4,116 +4,146 @@
 
 {% block content %}
 
-<h2>📦 Inventario </h2>
+<section class="inventario-contenedor">
+    <div class="encabezado-seccion">
+        <h2>📦 Inventario</h2>
+        <p>Registra tus productos de forma organizada por categoría y presentación.</p>
+    </div>
 
-<div class="form-box">
-    <h3>➕ Agregar producto</h3>
+    <div class="form-box">
+        <h3>➕ Agregar producto</h3>
 
-    <form method="POST">
-        <div class="fila">
-            <div>
-                <label for="nombre">Nombre del producto</label>
-                <input type="text" id="nombre" name="nombre" required>
+        <form method="POST" class="form-inventario">
+            <div class="fila">
+                <div class="campo">
+                    <label for="nombre">Nombre del producto</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ej: Jugo de naranja" required>
+                </div>
+
+                <div class="campo">
+                    <label for="tipo">Categoría</label>
+                    <select id="tipo" name="tipo" required onchange="cambiarPresentaciones()">
+                        <option value="">Seleccione una categoría</option>
+                        <option value="Jugos">Jugos</option>
+                        <option value="Batidas">Batidas</option>
+                        <option value="Panes">Panes</option>
+                        <option value="Friquitaquis">Friquitaquis</option>
+                        <option value="Comida rapida">Comida rápida</option>
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label for="tipo">Tipo de producto</label>
-                <select id="tipo" name="tipo" required onchange="cambiarCamposPrecio()">
-                    <option value="">Seleccione una categoría</option>
-                    <option value="Desayuno">Desayuno</option>
-                    <option value="Jugos">Jugos</option>
-                    <option value="Batidas">Batidas</option>
-                    <option value="Sandwich">Sandwich</option>
-                    <option value="Arepas">Arepas</option>
-                    <option value="General">General</option>
-                </select>
-          
-    <input type="number" name="stock" placeholder="Cantidad" required>
+            <div class="fila">
+                <div class="campo">
+                    <label for="presentacion">Presentación / Tamaño</label>
+                    <select id="presentacion" name="presentacion" required>
+                        <option value="">Seleccione primero una categoría</option>
+                    </select>
+                </div>
 
-    <input type="number" step="0.01" name="inversion_total" placeholder="Inversión total" required>
+                <div class="campo">
+                    <label for="stock">Cantidad en inventario</label>
+                    <input type="number" id="stock" name="stock" min="1" placeholder="Ej: 10" required>
+                </div>
+            </div>
 
-    <input type="number" step="0.01" name="precio" placeholder="Precio normal">
+            <div class="fila">
+                <div class="campo">
+                    <label for="inversion_total">Inversión total</label>
+                    <input type="number" step="0.01" id="inversion_total" name="inversion_total" min="0" placeholder="Ej: 500.00" required>
+                </div>
 
-    <input type="number" step="0.01" name="precio_pequeno" placeholder="Precio pequeño">
+                <div class="campo">
+                    <label for="precio_venta">Precio de venta</label>
+                    <input type="number" step="0.01" id="precio_venta" name="precio_venta" min="0" placeholder="Ej: 75.00" required>
+                </div>
+            </div>
 
-    <input type="number" step="0.01" name="precio_grande" placeholder="Precio grande">
+            <div class="acciones">
+                <button type="submit" class="btn-principal">💾 Guardar producto</button>
+            </div>
+        </form>
+    </div>
 
-        <div class="acciones">
-            <button type="submit">💾 Guardar producto</button>
+    {% if mensaje %}
+    <div class="resultado {% if tipo_mensaje == 'ok' %}resultado-ok{% else %}resultado-error{% endif %}">
+        {{ mensaje }}
+    </div>
+    {% endif %}
+
+    <div class="tabla-box">
+        <h3>📋 Lista de productos</h3>
+
+        <div class="tabla-responsive">
+            <table class="tabla-inventario">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Presentación</th>
+                        <th>Stock</th>
+                        <th>Inversión</th>
+                        <th>Costo unitario</th>
+                        <th>Precio venta</th>
+                        <th>Ganancia unitaria</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if productos %}
+                        {% for p in productos %}
+                        <tr>
+                            <td>{{ p.nombre }}</td>
+                            <td>{{ p.tipo }}</td>
+                            <td>{{ p.presentacion }}</td>
+                            <td>
+                                {% if p.stock <= 5 %}
+                                    <span class="stock-bajo">{{ p.stock }} ⚠️</span>
+                                {% else %}
+                                    <span class="stock-normal">{{ p.stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td>RD$ {{ "%.2f"|format(p.inversion_total) }}</td>
+                            <td>RD$ {{ "%.2f"|format(p.costo_unitario) }}</td>
+                            <td>RD$ {{ "%.2f"|format(p.precio_venta) }}</td>
+                            <td>RD$ {{ "%.2f"|format(p.ganancia_unitaria) }}</td>
+                            <td class="acciones-tabla">
+                                <a class="link-btn" href="/editar_producto/{{ p.id }}">✏️ Editar</a>
+                                <a class="link-btn sec" href="/eliminar_producto/{{ p.id }}" onclick="return confirm('¿Seguro que deseas eliminar este producto?')">🗑 Eliminar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="sin-datos">No hay productos registrados.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
-    </form>
-</div>
-
-{% if mensaje %}
-<div class="resultado {% if tipo_mensaje == 'ok' %}cuadrada{% else %}sobrante{% endif %}">
-    {{ mensaje }}
-</div>
-{% endif %}
-
-<div class="tabla-box">
-    <h3>📋 Lista de productos</h3>
-
-    <table border="1">
-    <tr>
-    <th>Nombre</th>
-    <th>Stock</th>
-    <th>Tipo</th>
-    <th>Precio</th>
-    <th>Costo Unitario</th>
-    <th>Acciones</th>
-    </tr>
-
-        <tbody>
-            {% if productos %}
-                {% for p in productos %}
-                <tr>
-                    <td>{{ p[0] }}</td>
-                    <td>{{ p[4] }}</td>
-                    <td>{{ p[1] }}</td>
-                    <td>
-                        {% if p[4] == "Jugos" %}
-                            Peq: RD$ {{ p[5] }}<br>
-                            Gra: RD$ {{ p[6] }}
-                        {% else %}
-                            RD$ {{ p[2] }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if p[3] <= 5 %}
-                            <span class="stock-bajo">{{ p[3] }} ⚠️</span>
-                        {% else %}
-                            {{ p[3] }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a class="link-btn" href="/editar_producto/{{ p[0] }}">✏️ Editar</a>
-                        <a class="link-btn sec" href="/eliminar_producto/{{ p[0] }}">🗑 Eliminar</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td colspan="6">No hay productos registrados.</td>
-                </tr>
-            {% endif %}
-        </tbody>
-    </table>
-</div>
+    </div>
+</section>
 
 <script>
-function cambiarCamposPrecio() {
+function cambiarPresentaciones() {
     const tipo = document.getElementById("tipo").value;
-    const normalBox = document.getElementById("precio_normal_box");
-    const jugosBox = document.getElementById("precio_jugos_box");
+    const presentacion = document.getElementById("presentacion");
 
-    if (tipo === "Jugos") {
-        normalBox.style.display = "none";
-        jugosBox.style.display = "grid";
-    } else {
-        normalBox.style.display = "grid";
-        jugosBox.style.display = "none";
+    let opciones = '<option value="">Seleccione una presentación</option>';
+
+    if (tipo === "Jugos" || tipo === "Batidas" || tipo === "Comida rapida") {
+        opciones += '<option value="Pequeño">Pequeño</option>';
+        opciones += '<option value="Grande">Grande</option>';
+    } 
+    else if (tipo === "Panes" || tipo === "Friquitaquis") {
+        opciones += '<option value="Normal">Normal</option>';
+        opciones += '<option value="Completo">Completo</option>';
     }
+
+    presentacion.innerHTML = opciones;
 }
+
+document.addEventListener("DOMContentLoaded", cambiarPresentaciones);
 </script>
 
 {% endblock %}

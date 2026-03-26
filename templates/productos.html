@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<h2>📦 Inventario </h2>
+<h2>📦 Inventario</h2>
 
 <div class="form-box">
     <h3>➕ Agregar producto</h3>
@@ -27,15 +27,39 @@
                     <option value="Arepas">Arepas</option>
                     <option value="General">General</option>
                 </select>
-          
-    <input type="number" name="stock" placeholder="Cantidad" required>
+            </div>
+        </div>
 
-    <input type="number" step="0.01" name="inversion_total" placeholder="Inversión total" required>
+        <div class="fila">
+            <div>
+                <label for="stock">Cantidad</label>
+                <input type="number" id="stock" name="stock" min="1" required>
+            </div>
 
+            <div>
+                <label for="inversion_total">Inversión total</label>
+                <input type="number" id="inversion_total" name="inversion_total" step="0.01" min="0" required>
+            </div>
+        </div>
 
-    <input type="number" step="0.01" name="precio_pequeno" placeholder="Precio pequeño">
+        <div id="precio_normal_box" class="fila">
+            <div>
+                <label for="precio">Precio normal</label>
+                <input type="number" id="precio" name="precio" step="0.01" min="0" placeholder="Precio normal">
+            </div>
+        </div>
 
-    <input type="number" step="0.01" name="precio_grande" placeholder="Precio grande">
+        <div id="precio_jugos_box" class="fila" style="display: none;">
+            <div>
+                <label for="precio_pequeno">Precio pequeño</label>
+                <input type="number" id="precio_pequeno" name="precio_pequeno" step="0.01" min="0" placeholder="Precio pequeño">
+            </div>
+
+            <div>
+                <label for="precio_grande">Precio grande</label>
+                <input type="number" id="precio_grande" name="precio_grande" step="0.01" min="0" placeholder="Precio grande">
+            </div>
+        </div>
 
         <div class="acciones">
             <button type="submit">💾 Guardar producto</button>
@@ -44,7 +68,7 @@
 </div>
 
 {% if mensaje %}
-<div class="resultado {% if tipo_mensaje == 'ok' %}cuadrada{% else %}sobrante{% endif %}">
+<div class="resultado {% if tipo_mensaje == 'ok' %}cuadrada{% elif tipo_mensaje == 'info' %}cuadrada{% else %}sobrante{% endif %}">
     {{ mensaje }}
 </div>
 {% endif %}
@@ -53,30 +77,24 @@
     <h3>📋 Lista de productos</h3>
 
     <table border="1">
-    <tr>
-    <th>Nombre</th>
-    <th>Stock</th>
-    <th>Tipo</th>
-    <th>Precio</th>
-    <th>Costo Unitario</th>
-    <th>Acciones</th>
-    </tr>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Stock</th>
+                <th>Precio</th>
+                <th>Inversión total</th>
+                <th>Costo unitario</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
 
         <tbody>
             {% if productos %}
                 {% for p in productos %}
                 <tr>
-                    <td>{{ p[0] }}</td>
-                    <td>{{ p[4] }}</td>
                     <td>{{ p[1] }}</td>
-                    <td>
-                        {% if p[4] == "Jugos" %}
-                            Peq: RD$ {{ p[5] }}<br>
-                            Gra: RD$ {{ p[6] }}
-                        {% else %}
-                            RD$ {{ p[2] }}
-                        {% endif %}
-                    </td>
+                    <td>{{ p[4] }}</td>
                     <td>
                         {% if p[3] <= 5 %}
                             <span class="stock-bajo">{{ p[3] }} ⚠️</span>
@@ -85,14 +103,28 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a class="link-btn" href="/editar_producto/{{ p[0] }}">✏️ Editar</a>
-                        <a class="link-btn sec" href="/eliminar_producto/{{ p[0] }}">🗑 Eliminar</a>
+                        {% if p[4] == "Jugos" %}
+                            Peq: RD$ {{ "%.2f"|format(p[5] or 0) }}<br>
+                            Gra: RD$ {{ "%.2f"|format(p[6] or 0) }}
+                        {% else %}
+                            RD$ {{ "%.2f"|format(p[2] or 0) }}
+                        {% endif %}
+                    </td>
+                    <td>RD$ {{ "%.2f"|format(p[7] or 0) }}</td>
+                    <td>RD$ {{ "%.2f"|format(p[8] or 0) }}</td>
+                    <td>
+                        <a class="link-btn" href="{{ url_for('editar_producto', id=p[0]) }}">✏️ Editar</a>
+                        <a class="link-btn sec"
+                           href="{{ url_for('eliminar_producto', id=p[0]) }}"
+                           onclick="return confirm('¿Seguro que deseas eliminar este producto?')">
+                            🗑 Eliminar
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="6">No hay productos registrados.</td>
+                    <td colspan="7">No hay productos registrados.</td>
                 </tr>
             {% endif %}
         </tbody>
@@ -107,12 +139,14 @@ function cambiarCamposPrecio() {
 
     if (tipo === "Jugos") {
         normalBox.style.display = "none";
-        jugosBox.style.display = "grid";
+        jugosBox.style.display = "flex";
     } else {
-        normalBox.style.display = "grid";
+        normalBox.style.display = "flex";
         jugosBox.style.display = "none";
     }
 }
+
+document.addEventListener("DOMContentLoaded", cambiarCamposPrecio);
 </script>
 
 {% endblock %}

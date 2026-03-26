@@ -237,7 +237,6 @@ def editar_producto(id):
                    COALESCE(precio_pequeno, 0),
                    COALESCE(precio_grande, 0),
                    COALESCE(inversion_total, 0),
-                   COALESCE(costo_unitario, 0)
             FROM productos
             WHERE id = ?
         """, (id,))
@@ -268,7 +267,6 @@ def editar_producto(id):
         if conn:
             conn.close()
 
-
 @app.route("/actualizar_producto/<int:id>", methods=["POST"])
 def actualizar_producto(id):
     if "usuario" not in session:
@@ -295,13 +293,28 @@ def actualizar_producto(id):
         precio_grande = float(request.form.get("precio_grande") or 0)
 
         if not nombre:
-            return redirect(url_for("editar_producto", id=id, mensaje="Debe escribir el nombre del producto", tipo="error"))
+            return redirect(url_for(
+                "editar_producto",
+                id=id,
+                mensaje="Debe escribir el nombre del producto",
+                tipo="error"
+            ))
 
         if not tipo:
-            return redirect(url_for("editar_producto", id=id, mensaje="Debe seleccionar el tipo de producto", tipo="error"))
+            return redirect(url_for(
+                "editar_producto",
+                id=id,
+                mensaje="Debe seleccionar el tipo de producto",
+                tipo="error"
+            ))
 
         if stock <= 0:
-            return redirect(url_for("editar_producto", id=id, mensaje="El stock debe ser mayor que 0", tipo="error"))
+            return redirect(url_for(
+                "editar_producto",
+                id=id,
+                mensaje="El stock debe ser mayor que 0",
+                tipo="error"
+            ))
 
         costo_unitario = inversion_total / stock if stock > 0 else 0
 
@@ -334,14 +347,23 @@ def actualizar_producto(id):
                 costo_unitario = ?
             WHERE id = ?
         """, (
-            nombre, precio, stock, tipo, precio_pequeno, precio_grande,
-            inversion_total, costo_unitario, id
+            nombre,
+            precio,
+            stock,
+            tipo,
+            precio_pequeno,
+            precio_grande,
+            inversion_total,
+            costo_unitario,
+            id
         ))
 
         conn.commit()
         return redirect(url_for("productos", ok="editado"))
 
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Error al actualizar el producto: {e}"
 
     finally:

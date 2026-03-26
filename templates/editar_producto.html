@@ -1,28 +1,124 @@
 {% extends "base.html" %}
+
+{% block title %}Editar Producto - Cafetería La Curva{% endblock %}
+
 {% block content %}
 
-<h2>📊 Ganancias del negocio</h2>
+<div class="contenedor-editar">
+    <div class="encabezado-editar">
+        <h2>✏️ Editar producto</h2>
+        <p>Actualiza la información del producto de forma clara y organizada.</p>
+    </div>
 
-<h3>💵 Total vendido: RD$ {{total_vendido}}</h3>
-<h3>📥 Ingreso real: RD$ {{ingreso_total_detalle}}</h3>
-<h3>📦 Costo total vendido: RD$ {{costo_total_vendido}}</h3>
+    {% if mensaje %}
+    <div class="resultado {% if tipo_mensaje == 'ok' %}cuadrada{% else %}sobrante{% endif %}">
+        {{ mensaje }}
+    </div>
+    {% endif %}
 
-<hr>
+    <div class="form-box">
+        <form method="POST" action="{{ url_for('actualizar_producto', id=producto[0]) }}" class="form-editar-producto">
+            
+            <div class="fila">
+                <div class="campo">
+                    <label for="nombre">Nombre del producto</label>
+                    <input type="text" id="nombre" name="nombre" value="{{ producto[1] }}" required>
+                </div>
 
-<h2>🔥 Ganancia total: RD$ {{ganancia_total}}</h2>
+                <div class="campo">
+                    <label for="tipo">Tipo de producto</label>
+                    <select id="tipo" name="tipo" required onchange="cambiarCamposPrecio()">
+                        <option value="">Seleccione una categoría</option>
+                        <option value="Desayuno" {% if producto[4] == "Desayuno" %}selected{% endif %}>Desayuno</option>
+                        <option value="Jugos" {% if producto[4] == "Jugos" %}selected{% endif %}>Jugos</option>
+                        <option value="Batidas" {% if producto[4] == "Batidas" %}selected{% endif %}>Batidas</option>
+                        <option value="Sandwich" {% if producto[4] == "Sandwich" %}selected{% endif %}>Sandwich</option>
+                        <option value="Arepas" {% if producto[4] == "Arepas" %}selected{% endif %}>Arepas</option>
+                        <option value="General" {% if producto[4] == "General" %}selected{% endif %}>General</option>
+                    </select>
+                </div>
+            </div>
 
-<hr>
+            <div class="fila">
+                <div class="campo">
+                    <label for="stock">Stock</label>
+                    <input type="number" id="stock" name="stock" value="{{ producto[3] }}" min="1" required>
+                </div>
 
-<h3>📦 Valor inventario: RD$ {{valor_inventario}}</h3>
+                <div class="campo">
+                    <label for="inversion_total">Inversión total</label>
+                    <input type="number"
+                           step="0.01"
+                           id="inversion_total"
+                           name="inversion_total"
+                           value="{{ producto[7] if producto|length > 7 else 0 }}"
+                           min="0"
+                           required>
+                </div>
+            </div>
 
-<hr>
+            <div class="fila" id="precio_normal_box">
+                <div class="campo">
+                    <label for="precio">Precio normal</label>
+                    <input type="number"
+                           step="0.01"
+                           id="precio"
+                           name="precio"
+                           value="{{ producto[2] }}"
+                           min="0">
+                </div>
+            </div>
 
-<h2>📈 Distribución inteligente</h2>
+            <div class="fila" id="precio_jugos_box" style="display:none;">
+                <div class="campo">
+                    <label for="precio_pequeno">Precio pequeño</label>
+                    <input type="number"
+                           step="0.01"
+                           id="precio_pequeno"
+                           name="precio_pequeno"
+                           value="{{ producto[5] }}"
+                           min="0">
+                </div>
 
-<ul>
-<li>🔁 Reinversión (60%): RD$ {{capital_reinversion}}</li>
-<li>💰 Ahorro (20%): RD$ {{ahorro_reserva}}</li>
-<li>⚠️ Fondo emergencia (20%): RD$ {{fondo_imprevistos}}</li>
-</ul>
+                <div class="campo">
+                    <label for="precio_grande">Precio grande</label>
+                    <input type="number"
+                           step="0.01"
+                           id="precio_grande"
+                           name="precio_grande"
+                           value="{{ producto[6] }}"
+                           min="0">
+                </div>
+            </div>
+
+            <div class="info-box">
+                <p><strong>Nota:</strong> si el producto es de tipo <strong>Jugos</strong>, se usarán los campos de precio pequeño y grande. Para los demás productos, se usará el precio normal.</p>
+            </div>
+
+            <div class="acciones">
+                <button type="submit" class="btn-principal">✅ Actualizar producto</button>
+                <a class="link-btn sec" href="{{ url_for('productos') }}">⬅ Volver</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function cambiarCamposPrecio() {
+    const tipo = document.getElementById("tipo").value;
+    const normalBox = document.getElementById("precio_normal_box");
+    const jugosBox = document.getElementById("precio_jugos_box");
+
+    if (tipo === "Jugos") {
+        normalBox.style.display = "none";
+        jugosBox.style.display = "flex";
+    } else {
+        normalBox.style.display = "flex";
+        jugosBox.style.display = "none";
+    }
+}
+
+window.addEventListener("DOMContentLoaded", cambiarCamposPrecio);
+</script>
 
 {% endblock %}

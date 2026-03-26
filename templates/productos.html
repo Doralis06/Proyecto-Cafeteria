@@ -9,7 +9,7 @@
 <div class="form-box">
     <h3>➕ Agregar producto</h3>
 
-    <form method="POST">
+    <form method="POST" action="{{ url_for('productos') }}">
         <div class="fila">
             <div>
                 <label for="nombre">Nombre del producto</label>
@@ -76,59 +76,61 @@
 <div class="tabla-box">
     <h3>📋 Lista de productos</h3>
 
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Stock</th>
-                <th>Precio</th>
-                <th>Inversión total</th>
-                <th>Costo unitario</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
+    <div class="tabla-responsive">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Stock</th>
+                    <th>Precio</th>
+                    <th>Inversión total</th>
+                    <th>Costo unitario</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
 
-        <tbody>
-            {% if productos %}
-                {% for p in productos %}
-                <tr>
-                    <td>{{ p[1] }}</td>
-                    <td>{{ p[4] }}</td>
-                    <td>
-                        {% if p[3] <= 5 %}
-                            <span class="stock-bajo">{{ p[3] }} ⚠️</span>
-                        {% else %}
-                            {{ p[3] }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if p[4] == "Jugos" %}
-                            Peq: RD$ {{ "%.2f"|format(p[5] or 0) }}<br>
-                            Gra: RD$ {{ "%.2f"|format(p[6] or 0) }}
-                        {% else %}
-                            RD$ {{ "%.2f"|format(p[2] or 0) }}
-                        {% endif %}
-                    </td>
-                    <td>RD$ {{ "%.2f"|format(p[7] or 0) }}</td>
-                    <td>RD$ {{ "%.2f"|format(p[8] or 0) }}</td>
-                    <td>
-                        <a class="link-btn" href="{{ url_for('editar_producto', id=p[0]) }}">✏️ Editar</a>
-                        <a class="link-btn sec"
-                           href="{{ url_for('eliminar_producto', id=p[0]) }}"
-                           onclick="return confirm('¿Seguro que deseas eliminar este producto?')">
-                            🗑 Eliminar
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td colspan="7">No hay productos registrados.</td>
-                </tr>
-            {% endif %}
-        </tbody>
-    </table>
+            <tbody>
+                {% if productos %}
+                    {% for p in productos %}
+                    <tr>
+                        <td>{{ p[1] }}</td>
+                        <td>{{ p[4] }}</td>
+                        <td>
+                            {% if p[3] <= 5 %}
+                                <span class="stock-bajo">{{ p[3] }} ⚠️</span>
+                            {% else %}
+                                {{ p[3] }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p[4] == "Jugos" %}
+                                <strong>Peq:</strong> RD$ {{ "%.2f"|format(p[5] or 0) }}<br>
+                                <strong>Gra:</strong> RD$ {{ "%.2f"|format(p[6] or 0) }}
+                            {% else %}
+                                RD$ {{ "%.2f"|format(p[2] or 0) }}
+                            {% endif %}
+                        </td>
+                        <td>RD$ {{ "%.2f"|format(p[7] or 0) }}</td>
+                        <td>RD$ {{ "%.2f"|format(p[8] or 0) }}</td>
+                        <td class="acciones-tabla">
+                            <a class="link-btn" href="{{ url_for('editar_producto', id=p[0]) }}">✏️ Editar</a>
+                            <a class="link-btn sec"
+                               href="{{ url_for('eliminar_producto', id=p[0]) }}"
+                               onclick="return confirm('¿Seguro que deseas eliminar este producto?')">
+                                🗑 Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7">No hay productos registrados.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -136,6 +138,8 @@ function cambiarCamposPrecio() {
     const tipo = document.getElementById("tipo").value;
     const normalBox = document.getElementById("precio_normal_box");
     const jugosBox = document.getElementById("precio_jugos_box");
+
+    if (!normalBox || !jugosBox) return;
 
     if (tipo === "Jugos") {
         normalBox.style.display = "none";
@@ -146,7 +150,9 @@ function cambiarCamposPrecio() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", cambiarCamposPrecio);
+document.addEventListener("DOMContentLoaded", function () {
+    cambiarCamposPrecio();
+});
 </script>
 
 {% endblock %}

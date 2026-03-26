@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, redirect, session, jsonify, url_for
 from database import crear_bd, crear_usuario_admin, conectar
 
 app = Flask(__name__)
@@ -27,8 +27,8 @@ def login():
     conn = None
     try:
         if request.method == "POST":
-            username = request.form["username"]
-            password = request.form["password"]
+            username = request.form.get("username", "").strip()
+            password = request.form.get("password", "").strip()
 
             conn = conectar_seguro()
             c = conn.cursor()
@@ -40,12 +40,16 @@ def login():
             user = c.fetchone()
 
             if user:
+                session.permanent = True
                 session["usuario"] = username
                 return redirect("/dashboard")
             else:
                 return render_template("login.html", error="Usuario o contraseña incorrectos")
 
         return render_template("login.html")
+
+    except Exception as e:
+        return f"Error en login: {e}"
 
     finally:
         if conn:
@@ -90,19 +94,23 @@ def productos():
         c = conn.cursor()
 
         if request.method == "POST":
-            nombre = request.form["nombre"].strip()
-            tipo = request.form["tipo"].strip()
-            stock = int(request.form["stock"])
+            nombre = request.form.get("nombre", "").strip()
+            tipo = request.form.get("tipo", "").strip()
+            stock = int(request.form.get("stock") or 0)
             inversion_total = float(request.form.get("inversion_total") or 0)
-
-            if stock <= 0:
-                return "❌ El stock debe ser mayor que 0."
-
-            costo_unitario = inversion_total / stock
 
             precio = float(request.form.get("precio") or 0)
             precio_pequeno = float(request.form.get("precio_pequeno") or 0)
             precio_grande = float(request.form.get("precio_grande") or 0)
+
+            if not nombre:
+                return redirect(url_for("productos", error="Debe escribir el nombre del producto"))
+            if not tipo:
+                return redirect(url_for("productos", error="Debe seleccionar el tipo de producto"))
+            if stock <= 0:
+                return redirect(url_for("productos", error="El stock debe ser mayor que 0"))
+
+            costo_unitario = inversion_total / stock if stock > 0 else 0
 
             if tipo == "Jugos":
                 precio = 0
@@ -132,8 +140,8 @@ def productos():
                     nueva_inversion_total, nuevo_costo_unitario, producto_id
                 ))
 
-                mensaje = f"El producto '{nombre}' ya existía. Se actualizó y se sumó el stock."
-                tipo_mensaje = "info"
+                conn.commit()
+                return redirect(url_for("productos", ok="actualizado"))
             else:
                 c.execute("""
                     INSERT INTO productos (
@@ -148,10 +156,21 @@ def productos():
                     inversion_total, costo_unitario
                 ))
 
-                mensaje = f"Producto '{nombre}' agregado correctamente."
-                tipo_mensaje = "ok"
+                conn.commit()
+                return redirect(url_for("productos", ok="guardado"))
 
-            conn.commit()
+        ok = request.args.get("ok")
+        error = request.args.get("error")
+
+        if ok == "guardado":
+            mensaje = "Producto agregado correctamente."
+            tipo_mensaje = "ok"
+        elif ok == "actualizado":
+            mensaje = "El producto ya existía. Se actualizó y se sumó el stock."
+            tipo_mensaje = "info"
+        elif error:
+            mensaje = error
+            tipo_mensaje = "error"
 
         c.execute("SELECT * FROM productos ORDER BY tipo, nombre")
         productos = c.fetchall()
@@ -163,8 +182,8 @@ def productos():
             tipo_mensaje=tipo_mensaje
         )
 
-    except sqlite3.OperationalError as e:
-        return f"Error de base de datos: {e}"
+    except Exception as e:
+        return f"Error en productos: {e}"
 
     finally:
         if conn:
@@ -195,8 +214,8 @@ def eliminar_producto(id):
     except sqlite3.IntegrityError as e:
         return f"No se puede eliminar este producto porque está relacionado con otros datos. Error: {e}"
 
-    except sqlite3.OperationalError as e:
-        return f"Error de base de datos al eliminar: {e}"
+    except Exception as e:
+        return f"Error al eliminar producto: {e}"
 
     finally:
         if conn:
@@ -232,9 +251,17 @@ def editar_producto(id):
         while len(producto) < 9:
             producto.append(0)
 
-        return render_template("editar_producto.html", producto=producto)
+        mensaje = request.args.get("mensaje")
+        tipo_mensaje = request.args.get("tipo", "error")
 
-    except sqlite3.OperationalError as e:
+        return render_template(
+            "editar_producto.html",
+            producto=producto,
+            mensaje=mensaje,
+            tipo_mensaje=tipo_mensaje
+        )
+
+    except Exception as e:
         return f"Error al cargar el producto para editar: {e}"
 
     finally:
@@ -258,19 +285,25 @@ def actualizar_producto(id):
         if not existe:
             return "❌ Producto no encontrado"
 
-        nombre = request.form["nombre"].strip()
-        tipo = request.form["tipo"].strip()
-        stock = int(request.form["stock"] or 0)
+        nombre = request.form.get("nombre", "").strip()
+        tipo = request.form.get("tipo", "").strip()
+        stock = int(request.form.get("stock") or 0)
         inversion_total = float(request.form.get("inversion_total") or 0)
-
-        if stock <= 0:
-            return "❌ El stock debe ser mayor que 0."
-
-        costo_unitario = inversion_total / stock
 
         precio = float(request.form.get("precio") or 0)
         precio_pequeno = float(request.form.get("precio_pequeno") or 0)
         precio_grande = float(request.form.get("precio_grande") or 0)
+
+        if not nombre:
+            return redirect(url_for("editar_producto", id=id, mensaje="Debe escribir el nombre del producto", tipo="error"))
+
+        if not tipo:
+            return redirect(url_for("editar_producto", id=id, mensaje="Debe seleccionar el tipo de producto", tipo="error"))
+
+        if stock <= 0:
+            return redirect(url_for("editar_producto", id=id, mensaje="El stock debe ser mayor que 0", tipo="error"))
+
+        costo_unitario = inversion_total / stock if stock > 0 else 0
 
         if tipo == "Jugos":
             precio = 0
@@ -282,7 +315,12 @@ def actualizar_producto(id):
         repetido = c.fetchone()
 
         if repetido:
-            return f"❌ Ya existe otro producto con el nombre '{nombre}'."
+            return redirect(url_for(
+                "editar_producto",
+                id=id,
+                mensaje=f"Ya existe otro producto con el nombre '{nombre}'",
+                tipo="error"
+            ))
 
         c.execute("""
             UPDATE productos
@@ -301,9 +339,9 @@ def actualizar_producto(id):
         ))
 
         conn.commit()
-        return redirect("/productos")
+        return redirect(url_for("productos", ok="editado"))
 
-    except sqlite3.OperationalError as e:
+    except Exception as e:
         return f"Error al actualizar el producto: {e}"
 
     finally:
@@ -326,6 +364,9 @@ def facturacion():
         productos = c.fetchall()
 
         return render_template("facturacion.html", productos=productos)
+
+    except Exception as e:
+        return f"Error en facturación: {e}"
 
     finally:
         if conn:
@@ -434,6 +475,9 @@ def ver_factura(id):
 
         return render_template("factura.html", factura=factura, detalles=detalles)
 
+    except Exception as e:
+        return f"Error al ver factura: {e}"
+
     finally:
         if conn:
             conn.close()
@@ -478,6 +522,9 @@ def reportes():
             total_real=total_real
         )
 
+    except Exception as e:
+        return f"Error en reportes: {e}"
+
     finally:
         if conn:
             conn.close()
@@ -495,7 +542,7 @@ def ver_reporte(id):
             conn.row_factory = lambda cursor, row: {
                 col[0]: row[idx] for idx, col in enumerate(cursor.description)
             }
-        except:
+        except Exception:
             pass
 
         c = conn.cursor()
@@ -521,6 +568,9 @@ def ver_reporte(id):
         facturas = c.fetchall()
 
         return render_template("reporte_detalle.html", reporte=reporte, facturas=facturas)
+
+    except Exception as e:
+        return f"Error al ver reporte: {e}"
 
     finally:
         if conn:
@@ -581,6 +631,9 @@ def grafica_ventas():
 
         return jsonify({"fechas": fechas, "totales": totales})
 
+    except Exception:
+        return jsonify({"fechas": [], "totales": []})
+
     finally:
         if conn:
             conn.close()
@@ -630,6 +683,9 @@ def ventas():
             fecha_inicio=fecha_inicio,
             fecha_fin=fecha_fin
         )
+
+    except Exception as e:
+        return f"Error en ventas: {e}"
 
     finally:
         if conn:
@@ -722,6 +778,9 @@ def estadisticas():
             totales=totales
         )
 
+    except Exception as e:
+        return f"Error en estadísticas: {e}"
+
     finally:
         if conn:
             conn.close()
@@ -755,20 +814,10 @@ def ganancias():
 
         for p in productos:
             nombre = p[0]
-            precio = float(p[1] or 0)
             stock = int(p[2] or 0)
-            tipo = p[3] or "General"
-            precio_pequeno = float(p[4] or 0)
-            precio_grande = float(p[5] or 0)
-            inversion_total = float(p[6] or 0)
             costo_unitario = float(p[7] or 0)
 
             productos_dict[nombre] = {
-                "precio": precio,
-                "tipo": tipo,
-                "precio_pequeno": precio_pequeno,
-                "precio_grande": precio_grande,
-                "inversion_total": inversion_total,
                 "costo_unitario": costo_unitario
             }
 
@@ -969,6 +1018,9 @@ def caja():
             cierres=cierres
         )
 
+    except Exception as e:
+        return f"Error en caja: {e}"
+
     finally:
         if conn:
             conn.close()
@@ -982,9 +1034,13 @@ def ver_cierre(id):
     conn = None
     try:
         conn = conectar_seguro()
-        conn.row_factory = lambda cursor, row: {
-            col[0]: row[idx] for idx, col in enumerate(cursor.description)
-        }
+        try:
+            conn.row_factory = lambda cursor, row: {
+                col[0]: row[idx] for idx, col in enumerate(cursor.description)
+            }
+        except Exception:
+            pass
+
         c = conn.cursor()
 
         c.execute("SELECT * FROM cierres_caja WHERE id = ?", (id,))
@@ -994,6 +1050,9 @@ def ver_cierre(id):
             return "❌ No se encontró el cierre"
 
         return render_template("cierre_detalle.html", cierre=cierre)
+
+    except Exception as e:
+        return f"Error al ver cierre: {e}"
 
     finally:
         if conn:

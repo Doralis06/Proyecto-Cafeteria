@@ -221,7 +221,6 @@ def eliminar_producto(id):
         if conn:
             conn.close()
 
-
 @app.route("/editar_producto/<int:id>")
 def editar_producto(id):
     if "usuario" not in session:
@@ -233,22 +232,22 @@ def editar_producto(id):
         c = conn.cursor()
 
         c.execute("""
-            SELECT id, nombre, precio, stock, tipo,
+            SELECT id,
+                   nombre,
+                   COALESCE(precio, 0),
+                   COALESCE(stock, 0),
+                   COALESCE(tipo, 'General'),
                    COALESCE(precio_pequeno, 0),
                    COALESCE(precio_grande, 0),
                    COALESCE(inversion_total, 0),
+                   COALESCE(costo_unitario, 0)
             FROM productos
             WHERE id = ?
         """, (id,))
         producto = c.fetchone()
 
         if not producto:
-            return "❌ Producto no encontrado"
-
-        producto = list(producto)
-
-        while len(producto) < 9:
-            producto.append(0)
+            return redirect(url_for("productos", error="Producto no encontrado"))
 
         mensaje = request.args.get("mensaje")
         tipo_mensaje = request.args.get("tipo", "error")
@@ -266,7 +265,6 @@ def editar_producto(id):
     finally:
         if conn:
             conn.close()
-
 @app.route("/actualizar_producto/<int:id>", methods=["POST"])
 def actualizar_producto(id):
     if "usuario" not in session:
@@ -281,7 +279,7 @@ def actualizar_producto(id):
         existe = c.fetchone()
 
         if not existe:
-            return "❌ Producto no encontrado"
+            return redirect(url_for("productos", error="Producto no encontrado"))
 
         nombre = request.form.get("nombre", "").strip()
         tipo = request.form.get("tipo", "").strip()
@@ -369,8 +367,7 @@ def actualizar_producto(id):
     finally:
         if conn:
             conn.close()
-
-
+            
 # ---------------- FACTURACIÓN ----------------
 @app.route("/facturacion")
 def facturacion():

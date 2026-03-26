@@ -26,9 +26,15 @@ def login():
 
     conn = None
     try:
+        error = None
+
         if request.method == "POST":
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "").strip()
+
+            if not username or not password:
+                error = "Debes completar usuario y contraseña."
+                return render_template("login.html", error=error)
 
             conn = conectar_seguro()
             c = conn.cursor()
@@ -40,21 +46,19 @@ def login():
             user = c.fetchone()
 
             if user:
-                session.permanent = True
                 session["usuario"] = username
                 return redirect("/dashboard")
             else:
-                return render_template("login.html", error="Usuario o contraseña incorrectos")
+                error = "Usuario o contraseña incorrectos."
 
-        return render_template("login.html")
+        return render_template("login.html", error=error)
 
     except Exception as e:
-        return f"Error en login: {e}"
+        return f"Error en el login: {e}"
 
     finally:
         if conn:
             conn.close()
-
 
 @app.before_request
 def proteger_rutas():

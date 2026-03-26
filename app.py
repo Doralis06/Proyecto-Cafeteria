@@ -1,21 +1,22 @@
+import os
 import sqlite3
+from datetime import timedelta
 from flask import Flask, render_template, request, redirect, session, jsonify, url_for
 from database import crear_bd, crear_usuario_admin, conectar
 
 app = Flask(__name__)
-app.secret_key = "clave_super_segura"
+app.secret_key = os.getenv("SECRET_KEY", "clave_super_segura")
+
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 crear_bd()
 crear_usuario_admin()
 
 
 def conectar_seguro():
-    conn = conectar()
-    try:
-        conn.execute("PRAGMA foreign_keys = ON")
-    except Exception:
-        pass
-    return conn
+    return conectar()
 
 
 # ---------------- LOGIN ----------------
@@ -46,6 +47,7 @@ def login():
             user = c.fetchone()
 
             if user:
+                session.permanent = True
                 session["usuario"] = username
                 return redirect("/dashboard")
             else:
@@ -59,6 +61,7 @@ def login():
     finally:
         if conn:
             conn.close()
+
 
 @app.before_request
 def proteger_rutas():
@@ -172,6 +175,9 @@ def productos():
         elif ok == "actualizado":
             mensaje = "El producto ya existía. Se actualizó y se sumó el stock."
             tipo_mensaje = "info"
+        elif ok == "editado":
+            mensaje = "Producto actualizado correctamente."
+            tipo_mensaje = "ok"
         elif error:
             mensaje = error
             tipo_mensaje = "error"
@@ -225,6 +231,7 @@ def eliminar_producto(id):
         if conn:
             conn.close()
 
+
 @app.route("/editar_producto/<int:id>")
 def editar_producto(id):
     if "usuario" not in session:
@@ -269,6 +276,8 @@ def editar_producto(id):
     finally:
         if conn:
             conn.close()
+
+
 @app.route("/actualizar_producto/<int:id>", methods=["POST"])
 def actualizar_producto(id):
     if "usuario" not in session:
@@ -371,7 +380,8 @@ def actualizar_producto(id):
     finally:
         if conn:
             conn.close()
-            
+
+
 # ---------------- FACTURACIÓN ----------------
 @app.route("/facturacion")
 def facturacion():

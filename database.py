@@ -1,3 +1,106 @@
+import os
+import sqlite3
+
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+
+
+# =========================
+# COMPATIBILIDAD POSTGRES
+# =========================
+class CursorCompat:
+    def __init__(self, cursor):
+        self._cursor = cursor
+        self.lastrowid = None
+
+    def _adapt_query(self, query: str):
+        """
+        Convierte placeholders SQLite (?) a Postgres (%s)
+        y añade RETURNING id a INSERTs cuando hace falta,
+        para que app.py pueda seguir usando lastrowid.
+        """
+        q = query.strip()
+        q_pg = q.replace("?", "%s")
+
+        upper_q = q_pg.upper()
+        if upper_q.startswith("INSERT INTO") and "RETURNING" not in upper_q:
+            q_pg += " RETURNING id"
+
+        return q_pg
+
+    def execute(self, query, params=None):
+        params = params or ()
+        q_pg = self._adapt_query(query)
+
+        self._cursor.execute(q_pg, params)
+
+        if q_pg.strip().upper().startswith("INSERT INTO"):
+            try:
+                row = self._cursor.fetchone()
+                if row:
+                    self.lastrowid = row[0]
+            except Exception:
+                self.lastrowid = None
+
+        return self
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    @property
+    def rowcount(self):
+        return self._cursor.rowcount
+
+
+class ConnectionCompat:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def cursor(self):
+        return CursorCompat(self._conn.cursor())
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+    def execute(self, query, params=None):
+        cur = self.cursor()
+        return cur.execute(query, params or ())
+
+
+# =========================
+# CONEXIÓN
+# =========================
+def conectar():
+    """
+    Si existe DATABASE_URL -> usa Postgres (Render / producción)
+    Si no existe -> usa SQLite local
+    """
+    database_url = os.getenv("DATABASE_URL")
+
+    if database_url and psycopg2:
+        conn = psycopg2.connect(database_url)
+        conn.autocommit = False
+        return ConnectionCompat(conn)
+
+    conn = sqlite3.connect("cafeteria.db", timeout=30)
+    return conn
+
+
+def es_postgres():
+    return bool(os.getenv("DATABASE_URL")) and psycopg2 is not None
+
+
 # =========================
 # CREAR BASE DE DATOS
 # =========================
@@ -19,70 +122,16 @@ def crear_bd():
         c.execute("""
         CREATE TABLE IF NOT EXISTS productos(
             id SERIAL PRIMARY KEY,
-            nombre VARCHAR(150),
-            tipo VARCHAR(100) DEFAULT 'General',
-            presentacion VARCHAR(50) DEFAULT 'Normal',
+            nombre VARCHAR(150) UNIQUE,
             precio NUMERIC DEFAULT 0,
+            stock INTEGER DEFAULT 0,
+            tipo VARCHAR(100) DEFAULT 'General',
             precio_pequeno NUMERIC DEFAULT 0,
             precio_grande NUMERIC DEFAULT 0,
-            precio_venta NUMERIC DEFAULT 0,
-            stock INTEGER DEFAULT 0,
             inversion_total NUMERIC DEFAULT 0,
-            costo_unitario NUMERIC DEFAULT 0,
-            ganancia_unitaria NUMERIC DEFAULT 0
+
         )
         """)
-
-        # Agregar columnas nuevas si la tabla ya existía
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN tipo VARCHAR(100) DEFAULT 'General'")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN presentacion VARCHAR(50) DEFAULT 'Normal'")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN precio NUMERIC DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN precio_pequeno NUMERIC DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN precio_grande NUMERIC DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN precio_venta NUMERIC DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN stock INTEGER DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN inversion_total NUMERIC DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN costo_unitario NUMERIC DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN ganancia_unitaria NUMERIC DEFAULT 0")
-        except:
-            pass
 
         # ---------------- SISTEMA VIEJO ----------------
         c.execute("""
@@ -113,16 +162,6 @@ def crear_bd():
             devuelta NUMERIC DEFAULT 0
         )
         """)
-
-        try:
-            c.execute("ALTER TABLE facturas ADD COLUMN pago_con NUMERIC DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE facturas ADD COLUMN devuelta NUMERIC DEFAULT 0")
-        except:
-            pass
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS detalle_factura(
@@ -170,19 +209,8 @@ def crear_bd():
         )
         """)
 
-        try:
-            c.execute("ALTER TABLE cierres_caja ADD COLUMN observaciones TEXT DEFAULT ''")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE cierres_caja ADD COLUMN usuario VARCHAR(100) DEFAULT ''")
-        except:
-            pass
-
         # ---------------- ÍNDICES ----------------
         c.execute("CREATE INDEX IF NOT EXISTS idx_producto_nombre ON productos(nombre)")
-        c.execute("CREATE INDEX IF NOT EXISTS idx_producto_tipo ON productos(tipo)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_factura_fecha ON facturas(fecha)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas(fecha)")
 
@@ -200,32 +228,19 @@ def crear_bd():
         c.execute("""
         CREATE TABLE IF NOT EXISTS productos(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT,
-            tipo TEXT DEFAULT 'General',
-            presentacion TEXT DEFAULT 'Normal',
+            nombre TEXT UNIQUE,
             precio REAL DEFAULT 0,
+            stock INTEGER DEFAULT 0,
+            tipo TEXT DEFAULT 'General',
             precio_pequeno REAL DEFAULT 0,
             precio_grande REAL DEFAULT 0,
-            precio_venta REAL DEFAULT 0,
-            stock INTEGER DEFAULT 0,
             inversion_total REAL DEFAULT 0,
-            costo_unitario REAL DEFAULT 0,
-            ganancia_unitaria REAL DEFAULT 0
+            costo_unitario REAL DEFAULT 0
         )
         """)
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN tipo TEXT DEFAULT 'General'")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN presentacion TEXT DEFAULT 'Normal'")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN precio REAL DEFAULT 0")
         except:
             pass
 
@@ -240,27 +255,12 @@ def crear_bd():
             pass
 
         try:
-            c.execute("ALTER TABLE productos ADD COLUMN precio_venta REAL DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN stock INTEGER DEFAULT 0")
-        except:
-            pass
-
-        try:
             c.execute("ALTER TABLE productos ADD COLUMN inversion_total REAL DEFAULT 0")
         except:
             pass
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN costo_unitario REAL DEFAULT 0")
-        except:
-            pass
-
-        try:
-            c.execute("ALTER TABLE productos ADD COLUMN ganancia_unitaria REAL DEFAULT 0")
         except:
             pass
 
@@ -366,9 +366,33 @@ def crear_bd():
 
         # ---------------- ÍNDICES ----------------
         c.execute("CREATE INDEX IF NOT EXISTS idx_producto_nombre ON productos(nombre)")
-        c.execute("CREATE INDEX IF NOT EXISTS idx_producto_tipo ON productos(tipo)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_factura_fecha ON facturas(fecha)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas(fecha)")
+
+    conn.commit()
+    conn.close()
+
+
+# =========================
+# USUARIO ADMIN
+# =========================
+def crear_usuario_admin():
+    conn = conectar()
+    c = conn.cursor()
+
+    if es_postgres():
+        c.execute("""
+            INSERT INTO usuarios (username, password)
+            VALUES (%s, %s)
+            ON CONFLICT (username) DO NOTHING
+        """, ("admin", "1234"))
+    else:
+        c.execute("SELECT * FROM usuarios WHERE username = 'admin'")
+        if not c.fetchone():
+            c.execute(
+                "INSERT INTO usuarios (username, password) VALUES (?, ?)",
+                ("admin", "1234")
+            )
 
     conn.commit()
     conn.close()

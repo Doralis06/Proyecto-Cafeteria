@@ -94,6 +94,7 @@ def conectar():
         return ConnectionCompat(conn)
 
     conn = sqlite3.connect("cafeteria.db", timeout=30)
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -129,7 +130,7 @@ def crear_bd():
             precio_pequeno NUMERIC DEFAULT 0,
             precio_grande NUMERIC DEFAULT 0,
             inversion_total NUMERIC DEFAULT 0,
-
+            costo_unitario NUMERIC DEFAULT 0
         )
         """)
 
@@ -241,27 +242,27 @@ def crear_bd():
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN tipo TEXT DEFAULT 'General'")
-        except:
+        except Exception:
             pass
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN precio_pequeno REAL DEFAULT 0")
-        except:
+        except Exception:
             pass
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN precio_grande REAL DEFAULT 0")
-        except:
+        except Exception:
             pass
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN inversion_total REAL DEFAULT 0")
-        except:
+        except Exception:
             pass
 
         try:
             c.execute("ALTER TABLE productos ADD COLUMN costo_unitario REAL DEFAULT 0")
-        except:
+        except Exception:
             pass
 
         # ---------------- SISTEMA VIEJO ----------------
@@ -298,12 +299,12 @@ def crear_bd():
 
         try:
             c.execute("ALTER TABLE facturas ADD COLUMN pago_con REAL DEFAULT 0")
-        except:
+        except Exception:
             pass
 
         try:
             c.execute("ALTER TABLE facturas ADD COLUMN devuelta REAL DEFAULT 0")
-        except:
+        except Exception:
             pass
 
         c.execute("""
@@ -356,12 +357,12 @@ def crear_bd():
 
         try:
             c.execute("ALTER TABLE cierres_caja ADD COLUMN observaciones TEXT DEFAULT ''")
-        except:
+        except Exception:
             pass
 
         try:
             c.execute("ALTER TABLE cierres_caja ADD COLUMN usuario TEXT DEFAULT ''")
-        except:
+        except Exception:
             pass
 
         # ---------------- ÍNDICES ----------------
